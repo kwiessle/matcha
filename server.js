@@ -16,12 +16,15 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    port: 8889,
-    //port: 3307
+    //port: 8889,
+    port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
 });
+var bodyParser = require('body-parser');
+var mustacheExpress = require('mustache-express');
+var create_account = require('./server/create_Account');
 
 
 
@@ -55,13 +58,43 @@ connection.query("use matcha");
 
 
 
+
+app.engine('html', mustacheExpress());
+app.set('view engine', 'html');
+app.set('views', __dirname + '/public/html/');
 app.use(express.static('public'));
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/public/html/index.html'));
 });
+
+app.post('/', function (req, res) {
+    var user = req.body.username;
+    var password = req.body.password;
+})
+
 app.get('/create_account.html', function (req, res) {
     res.sendFile(path.join(__dirname + '/public/html/create_account.html'));
+});
+
+app.post('/create_account.html', function (req, res) {
+    var firstname = req.body.firstname;
+    var lastname = req.body.lastname;
+    var birthday = req.body.birthday;
+    var username = req.body.username;
+    var email = req.body.email;
+    var conf_email = req.body.confirm_email;
+    var password = req.body.password;
+    var conf_password = req.body.confirm_password;
+    var sexe = req.body.sexe;
+    var ret = create_account.form_checker(firstname, lastname, birthday, username, email, conf_email, password, conf_password, sexe);
+    console.log(ret);
+    res.render('create_account.html', {
+        'message': ret
+    })
 });
 
 
