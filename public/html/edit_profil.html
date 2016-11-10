@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Matcha | Edit Profil</title>
+    <link href="/stylesheets/main.css" rel="stylesheet">
+    <link href="/stylesheets/edit_profil.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="/js/mustache.js"></script>
+    <script src="http://localhost:1234/socket.io/socket.io.js"></script>
+    <script src="/js/edit_profil.js"></script>
+</head>
+
+<body>
+    <div class="menu"> <img id="menu-logo" src="/img/mini-logo.png" alt="mini-logo">
+        <a href="#"><img class="menu-img" src="/img/feed.png"></a>
+        <a href="profile.html"><img class="menu-img" src="/img/account.png"></a>
+        <a href="message.html"><img class="menu-img" src="/img/envelope.png"></a>
+    </div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="site-content" align="center">
+        <div id="box" class="box"> <img src="/img/butt.png" alt="logo" width="250px">
+            <h1>Update Profil</h1>
+            <form id="form" class="edit-profil" method="post" align="center" enctype="multipart/form-data">
+                <label>Profil Picture</label>
+                <input id="pic" type="file" name="profilpic" onchange="previewFile()" />
+                <br> <img id="photo" height="250" width="250" style="display:none">
+                <label>Sexual orientation</label> Hetero
+                <input type="radio" name="orientation" value="hetero">Gay
+                <input type="radio" name="orientation" value="gay">Bi
+                <input type="radio" name="orientation" value="bi">
+                <br>
+                <label>Location</label>
+                <input id="location" class="input" type="text" name="location" placeholder="location">
+                <br>
+                <label>Bio</label>
+                <textarea id="bio" class="input" rows="5" col="51" name="bio"></textarea>
+                <br>
+                <label>Tags</label>
+                <input id="tags" class="input" type="text" name="preferences" placeholder="#busty #redhead #asian...">
+                <br>
+                <br>
+                <input id="Update" type="submit" name="profil" value="Update">
+                <br> </form>
+            <div id="display_pic"> </div>
+        </div>
+    </div>
+</body>
+
+</html>

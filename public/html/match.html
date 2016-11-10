@@ -1,0 +1,41 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Matcha | Profile</title>
+    <link href="/stylesheets/main.css" rel="stylesheet">
+    <link href="/stylesheets/match.css" rel="stylesheet">
+    <script type="text/javascript" src="/js/front.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="/js/mustache.js"></script>
+    <script src="http://localhost:1234/socket.io/socket.io.js"></script>
+    <script src="/js/match.js"></script>
+</head>
+
+<body>
+    <div class="menu">
+        <input id="search-bar" type="text" name="search" placeholder="Search ..."> <img id="menu-logo" src="img/mini-logo.png" alt="mini-logo">
+        <a href="#"><img class="menu-img" src="img/feed.png"></a>
+        <a href="profile.html"><img class="menu-img" src="/img/account.png"></a>
+        <a href="message.html"><img class="menu-img" src="/img/envelope.png"></a>
+        <a href="logout.html"><img class="menu-img" src="/img/logout.png"></a>
+    </div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="site-content" align="center">
+        <div id="match" class="hud" align="left">
+            <div id="mustache">
+                <div class="match-name">{{firstname}}</div>
+                <div class="match-age">22 ans</div>
+                <div class="match-location">{{location}}</div> <a class="show-profil" href="">voir le profil</a> <img id="like" src="img/success.png" alt="like-button"> <img id="berk" src="img/error.png" alt="like-button"> </div>
+        </div>
+    </div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+</body>
+
+</html>

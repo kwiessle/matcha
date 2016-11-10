@@ -1,0 +1,53 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Matcha | Edit Account</title>
+    <link href="/stylesheets/main.css" rel="stylesheet">
+    <link href="/stylesheets/edit_account.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="menu">
+        <img id="menu-logo" src="/img/mini-logo.png" alt="mini-logo">
+        <a href="#"><img class="menu-img" src="/img/feed.png"></a>
+        <a href="profile.html"><img class="menu-img" src="/img/account.png"></a>
+        <a href="message.html"><img class="menu-img" src="/img/envelope.png"></a>
+    </div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="site-content" align="center">
+        <div class="box">
+            <img src="/img/bed.png" alt="logo" width="250px">
+            <h1>Update Account</h1>
+        </div>
+        <div class="settings-set">
+            <div class="option c1" onClick="showEmailChanger()"><a href="#">Change E-mail</a></div>
+            <div id="change-email" class="change-email" style="display: none;">
+                <div class="current-email">Your email : wiesslerkiefer@gmail.com</div>
+                <form class="email-Changer" method="post">
+                    <input type="email" name="new-email">
+                    <br>
+                    <input type="email" name="confirm-new-email">
+                    <br>
+                    <input class="submit-btn" type="submit" name="confirm" value="Change">
+                </form>
+            </div>
+            <div class="option c2" onClick="showPasswordChanger()"><a href="#">Modify Password</a></div>
+            <div id="change-password" class="change-password">
+                <div class="current-email">An E-mail confimation is needed to change your paswword</div>
+                <form class="password-changer" method="post">
+                    <input class="submit-btn" type="submit" name="confirm" value="Send E-mail">
+                </form>
+            </div>
+            <div class="option c1"><a href="#">Delete Account</a></div>
+        </div>
+    </div>
+    <script type="text/javascript" src="js/front.js"></script>
+</body>
+
+</html>

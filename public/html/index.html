@@ -1,0 +1,38 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Mactcha | Connexion </title>
+    <link href="html/stylesheets/main.css" rel="stylesheet">
+    <link href="html/stylesheets/create_account.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="/js/mustache.js"></script>
+    <!-- <script src="http://localhost:1234/socket.io/socket.io.js"></script>
+    <script src="/js/index.js"></script> -->
+</head>
+
+<body>
+    <div class="site-content" align="center">
+        <div class="header">
+            <div class="separator"></div>
+            <img id="logo" src="/img/logo.png" alt="logo">
+        </div>
+
+        <div class="inscription-form">
+            <img id="form-logo" src="/img/tulip.png" alt="form-logo">
+            <h1>Connexion</h1>
+            <form class="form-account" method="post">
+                <input id="username" type="text" placeholder="Username" name="username">
+                <br>
+                <input id="password" type="password" placeholder="Password" name="password">
+                <br>
+                <input id="Send" class="button-submit" type="submit" name="login" value="Send">
+            </form>
+            <a id="link" class="link" href="create_account.html">New to Matcha ? Create your account here</a>
+        </div>
+    </div>
+</body>
+
+</html>

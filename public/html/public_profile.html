@@ -1,0 +1,68 @@
+<?php
+    session_start();
+?>
+
+    <html>
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title>Matcha | Profile</title>
+        <link href="stylesheets/main.css" rel="stylesheet">
+        <link href="stylesheets/profile.css" rel="stylesheet">
+    </head>
+
+    <body>
+        <div class="menu">
+            <img id="menu-logo" src="img/mini-logo.png" alt="mini-logo">
+            <a href="#"><img class="menu-img" src="img/feed.png"></a>
+            <a href="profile.html"><img class="menu-img" src="/img/account.png"></a>
+            <a href="message.html"><img class="menu-img" src="/img/envelope.png"></a>
+        </div>
+        <div class="separator"></div>
+        <div class="separator"></div>
+        <div class="separator"></div>
+        <div class="site-content" align="center">
+
+            <div class="separator"></div>
+            <div id="hud" class="hud" align="left">
+                <img id="usr-pic" src="/contents/user1">
+                <div class="user" align="left">
+                    <div class="usr-name">Kiefer Wiessler</div>
+                    <div class="usr-info">
+                        <ul>
+                            <li><img id="li-left" class="usr-icon" src="/img/cupcake.png">24</li>
+                            <li><img id="li-right" class="usr-icon" src="/img/placeholder.png">Paris</li>
+                        </ul>
+                    </div>
+                    <div class="usr-bio">
+                        kieferlaterreur 42 student. Informatic science school from Paris XVII
+                    </div>
+                </div>
+
+                <form method="get" class="liker">
+                    <input type="submit" name="liker" value="Like">
+                </form>
+
+
+
+
+            </div>
+            <div class="feed">
+                <div class="usr-set">
+                    <img src="/contents/usr-set1.jpg">
+                    <img src="/contents/usr-set2.jpg">
+                    <img src="/contents/usr-set3.jpg">
+                    <img src="/contents/usr-set4.jpg">
+                    <br>
+                </div>
+
+            </div>
+            <div class="separator"></div>
+            <div class="separator"></div>
+
+        </div>
+        <script type="text/javascript" src="/js/front.js"></script>
+    </body>
+
+    </html>

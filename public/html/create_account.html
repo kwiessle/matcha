@@ -1,0 +1,51 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Mactcha | Create Account </title>
+    <link href="/html/stylesheets/main.css" rel="stylesheet">
+    <link href="/html/stylesheets/create_account.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="/js/certificate.js"></script>
+    <script src="/js/mustache.js"></script>
+    <script src="http://localhost:1234/socket.io/socket.io.js"></script>
+    <script src="/js/createaccount.js"></script>
+</head>
+
+<body>
+    <div class="site-content" align="center">
+        <div class="header">
+            <div class="separator"></div> <img id="logo" src="img/logo.png" alt="logo"> </div>
+        <div class="inscription-form"> <img id="form-logo" src="/img/keys.png" alt="form-logo">
+            <form class="form-account" method="post">
+                <input type="text" id='firstname' placeholder="Firstname" name="firstname">
+                <br>
+                <input type="text" id='lastname' placeholder="Lastname" name="lastname">
+                <br>
+                <input type="date" id="birthday" name="birthday" placeholder="Birthday">
+                <br>
+                <input type="text" id='username' placeholder="Username" name="username">
+                <br>
+                <input type="email" id="email" placeholder="E-mail" name="email">
+                <br>
+                <input type="email" id="email_verif" placeholder="Confirm E-mail" name="confirm-email">
+                <br>
+                <input type="password" id='password' placeholder="Password" name="password">
+                <br>
+                <input type="password" id='password_verif' placeholder="Confirm Password" name="confirm-password">
+                <br>
+                <input id="input-fix" type="radio" name="sexe" value="male">
+                <div class="sexe">Male</div>
+                <input id="input-fix" type="radio" name="sexe" value="female">
+                <div class="sexe">Female</div>
+                <br>
+                <input id="Send" class="button-submit" type="submit" name="account" value="Send"> </form>
+            <a id="link" class="link" href="/">Already registred ? Connect you here</a>
+        </div>
+    </div>
+    <div class="footer"> </div>
+</body>
+
+</html>
