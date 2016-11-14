@@ -16,15 +16,17 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    port: 8889,
-    //port: 3307,
+    //port: 8889,
+    port: 3307,
     host: 'localhost',
     user: 'root',
-    password: 'root',
-    database: 'matcha'
+    password: 'root'
 });
 var bodyParser = require('body-parser');
 var mustacheExpress = require('mustache-express');
+var md5 = require('MD5');
+var uniqid = require('uniqid');
+
 var create_account = require('./server/create_Account');
 
 
@@ -78,27 +80,51 @@ app.post('/', function (req, res) {
 })
 
 app.get('/create_account.html', function (req, res) {
-    res.render('create_account.html', {
-        'message': ''
-    })
+    res.render('create_account.html', {})
 });
 
 app.post('/create_account.html', function (req, res) {
-    var firstname = req.body.firstname;
-    var lastname = req.body.lastname;
-    var birthday = req.body.birthday;
-    var username = req.body.username;
-    var email = req.body.email;
-    var conf_email = req.body.confirm_email;
-    var password = req.body.password;
-    var conf_password = req.body.confirm_password;
-    var sexe = req.body.sexe;
-    var sql = connection;
-    var ret = create_account.form_checker(firstname, lastname, birthday, username, email, conf_email, password, conf_password, sexe, sql);
-    console.log(ret);
-    res.render('create_account.html', {
-        'message': ret
-    })
+    var ret = create_account.form_checker(
+        req.body.firstname,
+        req.body.lastname,
+        req.body.birthday,
+        req.body.username,
+        req.body.email,
+        req.body.confirm_email,
+        req.body.password,
+        req.body.confirm_password,
+        req.body.sexe);
+    console.log(req.body.birthday);
+    if (ret === 'SQL') {
+        connection.query("SELECT * FROM users WHERE username = ?", [req.body.username], function (err, rows) {
+            if (err) throw err;
+            if (rows.length) {
+                res.render('create_account.html', {
+                    'message': 'Account already registred'
+                })
+            } else {
+                connection.query("SELECT * FROM users WHERE email = ?", [req.body.email], function (err, rows) {
+                    if (err) throw err;
+                    if (rows.length) {
+                        res.render('create_account.html', {
+                            'message': 'Email already registred'
+                        })
+                    } else {
+                        connection.query("INSERT INTO users(firstname, lastname, birthday, username, email, sexe, password, token) VALUES (?,?,?,?,?,?,?,?)", [req.body.firstname, req.body.lastname, new Date(req.body.birthday), req.body.username, req.body.email, req.body.sexe, md5(req.body.password), uniqid()], function (err, rows) {
+                            if (err) throw err;
+                            res.render('create_account.html', {
+                                'message': 'Your account has been created'
+                            })
+                        })
+                    }
+                })
+            }
+        })
+    } else {
+        res.render('create_account.html', {
+            'message': ret
+        })
+    }
 });
 
 
