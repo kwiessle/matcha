@@ -16,11 +16,12 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    //port: 8889,
-    port: 3307,
+    port: 8889,
+    //port: 3307,
     host: 'localhost',
     user: 'root',
-    password: 'root'
+    password: 'root',
+    database: 'matcha'
 });
 var bodyParser = require('body-parser');
 var mustacheExpress = require('mustache-express');
@@ -77,7 +78,9 @@ app.post('/', function (req, res) {
 })
 
 app.get('/create_account.html', function (req, res) {
-    res.sendFile(path.join(__dirname + '/public/html/create_account.html'));
+    res.render('create_account.html', {
+        'message': ''
+    })
 });
 
 app.post('/create_account.html', function (req, res) {
@@ -90,7 +93,8 @@ app.post('/create_account.html', function (req, res) {
     var password = req.body.password;
     var conf_password = req.body.confirm_password;
     var sexe = req.body.sexe;
-    var ret = create_account.form_checker(firstname, lastname, birthday, username, email, conf_email, password, conf_password, sexe);
+    var sql = connection;
+    var ret = create_account.form_checker(firstname, lastname, birthday, username, email, conf_email, password, conf_password, sexe, sql);
     console.log(ret);
     res.render('create_account.html', {
         'message': ret

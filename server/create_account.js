@@ -1,27 +1,16 @@
-exports.form_checker = function (firstname, lastname, birthday, username, email, conf_email, password, conf_password, sexe) {
+exports.form_checker = function (firstname, lastname, birthday, username, email, conf_email, password, conf_password, sexe, connection) {
     var ret = '';
-    if (!firstname)
-        return ('Please enter a firstname');
-    if (!lastname)
-        return ('Please enter a lastname');
-    if (!birthday)
-        return ('Please enter a birthday');
-    if (!username)
-        return ('Please enter an username');
-    if (!email)
-        return ('Please enter an email');
-    if (!conf_email)
-        return ('Please enter an email confirmation');
-    if (!password)
-        return ('Please enter a password');
-    if (!conf_password)
-        return ('Please enter a password confirmation');
-    if (!sexe)
-        return ('Please select a sexe kind');
-    else
-        return (1);
+    if (!firstname || !lastname || !birthday || !username || !email || !conf_email || !password || !conf_password || !sexe)
+        return ('Please fill all the fields');
+    else {
+        console.log('debut sql');
+        connection.connect(function (err) {
+            if (err) throw err;
+            connection.query("SELECT * FROM users WHERE username =?", [username], function (err, rows) {
+                if (rows.length) {
+                    return ('Username already registred');
+                }
+            });
+        });
+    }
 };
-
-exports.form_validator = function (username, email, conf_email) {
-    connection.query("CREATE DATABASE IF NOT EXISTS matcha;");
-}
