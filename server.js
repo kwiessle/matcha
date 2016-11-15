@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    //port: 8889,
-    port: 3307,
+    port: 8889,
+    //port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -26,8 +26,15 @@ var bodyParser = require('body-parser');
 var mustacheExpress = require('mustache-express');
 var md5 = require('MD5');
 var uniqid = require('uniqid');
-
+var session = require('express-session');
+var sess = {
+    secret: 'keyboard cat',
+    cookie: {},
+    resave: false,
+    saveUninitialized: false
+}
 var create_account = require('./server/create_Account');
+
 
 
 
@@ -54,7 +61,7 @@ connection.query("use matcha");
 
 
 
-/*     P  A  G  E  S      R  E  Q  U  E  S  T  S     -     E X P R E S S     */
+/*     P  A  G  E  S      R  E  Q  U  E  S  T  S     -     E X P R E S S   -    G  E  T    */
 
 
 
@@ -66,22 +73,86 @@ app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
 app.set('views', __dirname + '/public/html/');
 app.use(express.static('public'));
+app.use(session(sess));
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 
 app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname + '/public/html/index.html'));
+    res.render('index.html', {
+        message: 'Welcome to Matcha'
+    })
 });
 
-app.post('/', function (req, res) {
-    var user = req.body.username;
-    var password = req.body.password;
-})
+app.get('/profile.html', function (req, res) {
+    if (!req.session.user) {
+        res.redirect('/');
+    } else {
+        res.render('profile.html', {
+            firstname: req.session.firstname,
+            lastname: req.session.lastname
+        })
+    }
+});
 
 app.get('/create_account.html', function (req, res) {
-    res.render('create_account.html', {})
+    res.render('create_account.html')
 });
+
+app.get('/edit_profil.html', function (req, res) {
+    if (!req.session.user) {
+        res.redirect('/');
+    } else {
+        res.render('edit_profil.html')
+    }
+});
+
+app.get('/edit_account.html', function (req, res) {
+    res.render('edit_account.html')
+})
+
+app.get('/logout.html', function (req, res) {
+    connection.query("UPDATE users SET login = ? WHERE username = ?", ["offline", req.session.user])
+    req.session.destroy(function (err) {
+        if (err) throw err
+        res.redirect('/');
+    });
+});
+
+
+
+
+
+
+/*     P  A  G  E  S      M  A  N  I  P  U  L  A  T  I  O  N  S     -     E X P R E S S   -    P  O  S  T    */
+
+
+
+
+
+
+
+app.post('/', function (req, res) {
+    connection.query("SELECT * FROM users WHERE username = ? AND password = ?", [req.body.username, md5(req.body.password)], function (err, rows) {
+        if (err) throw err;
+        if (rows.length == 1) {
+            req.session.firstname = rows[0].firstname;
+            req.session.lastname = rows[0].lastname;
+            req.session.user = rows[0].username;
+            req.session.birthday = rows[0].birthday;
+            req.session.email = rows[0].email;
+            req.session.sexe = rows[0].sexe;
+            connection.query("UPDATE users SET login = ? WHERE username = ?", ["online", req.session.user])
+            res.redirect('profile.html');
+        } else {
+            res.render('index.html', {
+                message: 'Unknown account or invalid password'
+            })
+        }
+    })
+})
+
+
 
 app.post('/create_account.html', function (req, res) {
     var ret = create_account.form_checker(
@@ -125,10 +196,12 @@ app.post('/create_account.html', function (req, res) {
             'message': ret
         })
     }
-});
+})
 
 
-
+app.post('/edit_profil.html', function (req, res) {
+    console.log(req.body.orientation);
+})
 
 
 

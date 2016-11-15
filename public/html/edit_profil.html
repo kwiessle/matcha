@@ -7,9 +7,10 @@
     <link href="/stylesheets/main.css" rel="stylesheet">
     <link href="/stylesheets/edit_profil.css" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="/js/certificate.js"></script>
     <script src="/js/mustache.js"></script>
     <script src="http://localhost:1234/socket.io/socket.io.js"></script>
-    <script src="/js/edit_profil.js"></script>
+    <script src="/js/createaccount.js"></script>
 </head>
 
 <body>
@@ -28,8 +29,9 @@
             <h1>Update Profil</h1>
             <form id="form" class="edit-profil" method="post" align="center" enctype="multipart/form-data">
                 <label>Profil Picture</label>
-                <input id="pic" type="file" name="profilpic" onchange="previewFile()" />
-                <br> <img id="photo" height="250" width="250" style="display:none">
+                <input id="pic" type="file" name="profilpic" onchange="previewFile()">
+                <br>
+                <img id="photo" height="250" width="250" style="display:none">
                 <label>Sexual orientation</label> Hetero
                 <input type="radio" name="orientation" value="hetero">Gay
                 <input type="radio" name="orientation" value="gay">Bi
@@ -46,9 +48,11 @@
                 <br>
                 <br>
                 <input id="Update" type="submit" name="profil" value="Update">
-                <br> </form>
+                <br>
+            </form>
             <div id="display_pic"> </div>
         </div>
+        {{message}}
     </div>
 </body>
 

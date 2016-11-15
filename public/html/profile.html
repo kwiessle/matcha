@@ -4,12 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Matcha | Profile</title>
-    <link href="/stylesheets/main.css" rel="stylesheet">
-    <link href="/stylesheets/profile.css" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-    <script src="/js/mustache.js"></script>
-    <script src="http://localhost:1234/socket.io/socket.io.js"></script>
-    <script src="/js/profile.js"></script>
+    <link href="stylesheets/main.css" rel="stylesheet">
+    <link href="stylesheets/profile.css" rel="stylesheet">
 </head>
 
 <body>
@@ -29,7 +25,7 @@
                 <div class="usr-name">{{firstname}} {{lastname}}
                     <br>
                     <div class="usr-age">24 ans {{location}}</div>
-                    <div class="online">online</div>
+                    <div class="online">{{status}}</div>
                 </div>
                 <div class="bio" align="center">Bio</div>
                 <div class="usr-bio-text">{{bio}}</div>
@@ -39,11 +35,14 @@
         <div class="top-bar" align="left">
             <form class="form-bar">
                 <input class="input d1" type="submit" name="pov" value="follow">
-                <input class="input d2" type="submit" name="pov" value="unfollow"> </form>
-            <div class="reglage"><img src="img/cogwheel.png"></div>
+                <input class="input d2" type="submit" name="pov" value="unfollow">
+            </form>
+            <div class="reglage">
+                <a href="edit_profil.html"><img src="img/cogwheel.png"></a>
+            </div>
             <div class="relation">Kiefer vous follow</div>
         </div>
-        <div id="my_pictures" class="usr-set">  </div>
+        <div id="my_pictures" class="usr-set"> </div>
         <div class="bottom-bar" align="left">
             <div class="signaler"><a href="#">Signaler ce compte</a></div>
         </div>
