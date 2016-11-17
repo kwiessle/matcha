@@ -6,6 +6,7 @@
     <title>Matcha | Edit Account</title>
     <link href="stylesheets/main.css" rel="stylesheet">
     <link href="stylesheets/edit_account.css" rel="stylesheet">
+    <script src="js/front.js"></script>
 </head>
 
 <body>
@@ -28,11 +29,9 @@
         <div class="settings-set">
             <div class="option c1" onClick="showEmailChanger()"><a href="#">Change E-mail</a></div>
             <div id="change-email" class="change-email" style="display: none;">
-                <div class="current-email">Your email : wiesslerkiefer@gmail.com</div>
+                <div class="current-email">Your email : {{email}}</div>
                 <form class="email-Changer" method="post">
-                    <input type="email" name="new-email">
-                    <br>
-                    <input type="email" name="confirm-new-email">
+                    <input type="email" name="new_email">
                     <br>
                     <input class="submit-btn" type="submit" name="confirm" value="Change">
                 </form>
@@ -41,11 +40,14 @@
             <div id="change-password" class="change-password">
                 <div class="current-email">An E-mail confimation is needed to change your paswword</div>
                 <form class="password-changer" method="post">
-                    <input class="submit-btn" type="submit" name="confirm" value="Send E-mail">
+                    <input class="submit-btn" type="submit" name="sendEmail" value="Send E-mail">
                 </form>
             </div>
             <div class="option c1"><a href="#">Delete Account</a></div>
         </div>
+        <div class="separator"></div>
+        <div class="separator"></div>
+        <div class="console">{{message}}</div>
     </div>
     <script type="text/javascript" src="js/front.js"></script>
 </body>

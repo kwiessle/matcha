@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    port: 8889,
-    //port: 3307,
+    //port: 8889,
+    port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -33,6 +33,17 @@ var sess = {
     resave: false,
     saveUninitialized: false
 }
+
+var mailer = require('nodemailer');
+var smtpTransport = mailer.createTransport('SMTP', {
+    service: 'Gmail',
+    auth: {
+        user: 'noreply.matcha@gmail.com',
+        pass: 'zdpzdpzdp'
+    }
+});
+
+
 var create_account = require('./server/create_Account');
 
 
@@ -108,7 +119,13 @@ app.get('/edit_profil.html', function (req, res) {
 });
 
 app.get('/edit_account.html', function (req, res) {
-    res.render('edit_account.html')
+    if (!req.session.user) {
+        res.redirect('/');
+    } else {
+        res.render('edit_account.html', {
+            email: req.session.email
+        })
+    }
 })
 
 app.get('/logout.html', function (req, res) {
@@ -117,6 +134,10 @@ app.get('/logout.html', function (req, res) {
         if (err) throw err
         res.redirect('/');
     });
+});
+
+app.get('/change_password.html', function (req, res) {
+    res.render('change_password.html')
 });
 
 
@@ -201,6 +222,54 @@ app.post('/create_account.html', function (req, res) {
 
 app.post('/edit_profil.html', function (req, res) {
     console.log(req.body.orientation);
+})
+
+app.post('/edit_account.html', function (req, res) {
+    var mailOptions = {
+        from: 'no-reply@matcha.com',
+        to: req.session.email,
+        subject: 'Change password',
+        text: 'Hello ' + req.session.firstname + ', \n to change your password please click on the link below :',
+        html: '<a href="https://localhost:4433/">' + '</a>'
+    };
+    if (req.body.sendEmail) {
+        var mail = {
+            from: 'noreply.matcha@gmail.com',
+            to: req.session.email,
+            subject: 'Changing password',
+            html: '<p>Hello ' + req.session.user + '</p><br><p>Ton change your password please click on the link below:</p><br><a href="https://localhost:4433/">Change password</a>'
+        }
+        smtpTransport.sendMail(mail, function (error, response) {
+            if (error) {
+                res.render('edit_account.html', {
+                    'message': 'A problem occurs : Sending email failed'
+                })
+            } else {
+                res.render('edit_account.html', {
+                    'message': 'Email sended'
+                })
+            }
+            smtpTransport.close();
+        });
+    }
+    if (req.body.new_email) {
+        var regEmail = new RegExp('^[0-9a-z._-]+@{1}[0-9a-z.-]{2,}[.]{1}[a-z]{2,5}$', 'i');
+        if (!regEmail.test(req.body.new_email)) {
+            res.render('edit_account.html', {
+                message: 'Invalid email format',
+                email: req.session.email
+            })
+        } else {
+            connection.query("UPDATE users SET email = ? WHERE username = ?", [req.body.new_email, req.session.user], function (err) {
+                if (err) throw err;
+            })
+            req.session.email = req.body.new_email;
+            res.render('edit_account.html', {
+                message: 'Email updated',
+                email: req.session.email
+            })
+        }
+    }
 })
 
 
