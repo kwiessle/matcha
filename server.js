@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    //port: 8889,
-    port: 3307,
+    port: 8889,
+    //port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -42,6 +42,25 @@ var smtpTransport = mailer.createTransport('SMTP', {
         pass: 'zdpzdpzdp'
     }
 });
+var multer = require('multer');
+var storage = multer.diskStorage({
+    destination: function (req, file, callback) {
+        callback(null, './public/uploads');
+    },
+    filename: function (req, file, callback) {
+        callback(null, req.session.user + '-' + uniqid());
+    }
+});
+var upload = multer({
+    storage: storage,
+    fileFilter: function (req, file, cb) {
+        if (file.mimetype !== 'image/png' && file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/jpeg') {
+            req.fileValidationError = 'goes wrong on the mimetype';
+            return cb(null, false, new Error('goes wrong on the mimetype'));
+        }
+        cb(null, true);
+    }
+}).single('userPhoto');
 
 
 var create_account = require('./server/create_Account');
@@ -101,7 +120,9 @@ app.get('/profile.html', function (req, res) {
     } else {
         res.render('profile.html', {
             firstname: req.session.firstname,
-            lastname: req.session.lastname
+            lastname: req.session.lastname,
+            location: req.session.location,
+            bio: req.session.bio
         })
     }
 });
@@ -136,9 +157,31 @@ app.get('/logout.html', function (req, res) {
     });
 });
 
-app.get('/change_password.html', function (req, res) {
-    res.render('change_password.html')
+app.get('/change_password.html/:token/:username', function (req, res) {
+    if (!req.params.token || !req.params.username)
+        res.redirect('/');
+    else {
+        connection.query("SELECT token FROM users WHERE username = ?", [req.params.username], function (err, rows) {
+            if (err) throw err;
+            if (rows.length && rows[0].token === req.params.token) {
+                req.session.guest = req.params.username;
+                res.redirect('/change_password.html')
+            } else if (req.session.user) {
+                res.redirect('/profile.html')
+            } else {
+                res.redirect('/')
+            }
+        })
+    }
 });
+
+app.get('/change_password.html', function (req, res) {
+    if (req.session.guest) {
+        res.render('change_password.html')
+    } else {
+        res.redirect('/')
+    }
+})
 
 
 
@@ -162,7 +205,9 @@ app.post('/', function (req, res) {
             req.session.user = rows[0].username;
             req.session.birthday = rows[0].birthday;
             req.session.email = rows[0].email;
+            req.session.location = rows[0].location;
             req.session.sexe = rows[0].sexe;
+            req.session.token = rows[0].token;
             connection.query("UPDATE users SET login = ? WHERE username = ?", ["online", req.session.user])
             res.redirect('profile.html');
         } else {
@@ -221,8 +266,67 @@ app.post('/create_account.html', function (req, res) {
 
 
 app.post('/edit_profil.html', function (req, res) {
-    console.log(req.body.orientation);
-})
+    upload(req, res, function (err) {
+        var file_upload = '';
+        var orientation = '';
+        var location = '';
+        var bio = '';
+        if (req.fileValidationError) {
+            file_upload = 'Wrong file type : File not uploaded';
+        }
+        if (req.file) {
+            if (err) {
+                file_upload = 'A problem occurs : File not uploaded';
+            } else {
+                req.file.path = req.file.path.replace('public/', '');
+                if (!req.session.profil_pic) {
+                    connection.query("UPDATE users SET profil_pic = ? WHERE username = ?", [req.file.path, req.session.user], function (err) {
+                        if (err) throw err;
+                    })
+                    req.session.profil_pic = req.file.path;
+                }
+                connection.query("SELECT * FROM pictures WHERE username = ?", [req.session.user], function (err, rows) {
+                    if (err) throw err;
+                    if (rows.length < 5) {
+                        connection.query("INSERT INTO pictures(pic, username) VALUES(?,?)", [req.file.path, req.session.user], function (err) {
+                            if (err) throw err;
+                        })
+                    }
+                })
+                file_upload = 'File uploaded';
+            }
+        }
+        if (req.body.orientation) {
+            connection.query("UPDATE users SET sexual_or = ? WHERE username = ?", [req.body.orientatation, req.session.user], function (err) {
+                if (err) throw err;
+            })
+            orientation = 'Orientation updated';
+        }
+        if (req.body.location) {
+            connection.query("UPDATE users SET location = ? WHERE username = ?", [req.body.location, req.session.user], function (err) {
+                if (err) throw err;
+            })
+            req.session.location = req.body.location;
+
+            location = 'Location updated';
+        }
+        if (req.body.bio) {
+            connection.query("UPDATE users SET bio = ? WHERE username = ?", [req.body.bio, req.session.user], function (err) {
+                if (err) throw err;
+            })
+            req.session.bio = req.body.bio;
+
+            bio = 'Bio updated';
+        }
+
+        res.render('edit_profil.html', {
+            'orientation': orientation,
+            'location': location,
+            'bio': bio,
+            'upload': file_upload
+        })
+    })
+});
 
 app.post('/edit_account.html', function (req, res) {
     var mailOptions = {
@@ -237,7 +341,7 @@ app.post('/edit_account.html', function (req, res) {
             from: 'noreply.matcha@gmail.com',
             to: req.session.email,
             subject: 'Changing password',
-            html: '<p>Hello ' + req.session.user + '</p><br><p>Ton change your password please click on the link below:</p><br><a href="https://localhost:4433/">Change password</a>'
+            html: '<p>Hello ' + req.session.firstname + '</p><br><p>To change your password please click on the link below:</p><br><a href="https://localhost:4433/change_password.html/' + req.session.token + '/' + req.session.user + '">Change password</a>'
         }
         smtpTransport.sendMail(mail, function (error, response) {
             if (error) {
@@ -270,6 +374,32 @@ app.post('/edit_account.html', function (req, res) {
             })
         }
     }
+})
+
+
+app.post('/change_password.html', function (req, res) {
+    var ret = '';
+    if (req.body.new && req.body.confirmation) {
+        if (req.body.new === req.body.confirmation) {
+            connection.query("UPDATE users SET password = ? WHERE username = ?", [md5(req.body.confirmation), req.session.guest], function (err) {
+                if (err) throw err;
+                else {
+                    connection.query("UPDATE users SET token = ? WHERE username = ?", [uniqid(), req.session.guest], function (err) {
+                        if (err) throw err;
+                    })
+                }
+            })
+            ret = 'Password Updated';
+        } else {
+            ret = 'Passwords doesn\'t match';
+        }
+    } else {
+        ret = 'Please fill all the fields';
+    }
+    req.session.guest.destroy;
+    res.render('change_password.html', {
+        message: ret
+    })
 })
 
 
