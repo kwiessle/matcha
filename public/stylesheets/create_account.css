@@ -59,6 +59,21 @@
     vertical-align: middle;
 }
 
+#send {
+    margin-top: 30px;
+    width: 205px;
+}
+
+.main-title {
+    font-size: 28px;
+}
+
+.subtitle {
+    font-size: 10px;
+    width: 200px;
+    padding: 20px;
+}
+
 .sexe {
     display: inline-block;
 }
