@@ -127,6 +127,10 @@ app.get('/profile.html', function (req, res) {
     }
 });
 
+app.get('/reset_password.html', function (req, res) {
+    res.render('reset_password.html')
+})
+
 app.get('/create_account.html', function (req, res) {
     res.render('create_account.html')
 });
@@ -329,13 +333,6 @@ app.post('/edit_profil.html', function (req, res) {
 });
 
 app.post('/edit_account.html', function (req, res) {
-    var mailOptions = {
-        from: 'no-reply@matcha.com',
-        to: req.session.email,
-        subject: 'Change password',
-        text: 'Hello ' + req.session.firstname + ', \n to change your password please click on the link below :',
-        html: '<a href="https://localhost:4433/">' + '</a>'
-    };
     if (req.body.sendEmail) {
         var mail = {
             from: 'noreply.matcha@gmail.com',
@@ -373,6 +370,44 @@ app.post('/edit_account.html', function (req, res) {
                 email: req.session.email
             })
         }
+    }
+})
+
+app.post('/reset_password.html', function (req, res) {
+    if (req.body.sendMail) {
+        connection.query("SELECT * FROM users WHERE email = ?", [req.body.sendMail], function (err, rows) {
+            if (err) throw err;
+            else {
+                if (rows.length) {
+                    var mail = {
+                        from: 'noreply@matcha.com',
+                        to: req.body.sendMail,
+                        subject: 'Changing password',
+                        html: '<p>Hello ' + rows[0].firstname + '</p><br><p>To change your password please click on the link below:</p><br><a href="https://localhost:4433/change_password.html/' + rows[0].token + '/' + rows[0].username + '">Change password</a>'
+                    }
+                    smtpTransport.sendMail(mail, function (error, response) {
+                        if (error) {
+                            res.render('reset_password.html', {
+                                'message': 'A problem occurs : Sending email failed'
+                            })
+                        } else {
+                            res.render('reset_password.html', {
+                                'message': 'Email sended'
+                            })
+                        }
+                        smtpTransport.close();
+                    });
+                } else {
+                    res.render('reset_password.html', {
+                        message: 'Email not registred'
+                    })
+                }
+            }
+        })
+    } else {
+        res.render('reset_password.html', {
+            message: 'Please type your email'
+        })
     }
 })
 
