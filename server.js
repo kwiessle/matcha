@@ -48,7 +48,7 @@ var storage = multer.diskStorage({
         callback(null, './public/uploads');
     },
     filename: function (req, file, callback) {
-        callback(null, req.session.user + '-' + uniqid());
+        callback(null, req.session.user + '-' + uniqid() + '.png');
     }
 });
 var upload = multer({
@@ -61,7 +61,7 @@ var upload = multer({
         cb(null, true);
     }
 }).single('userPhoto');
-
+var sharp = require('sharp');
 
 var create_account = require('./server/create_Account');
 
@@ -117,12 +117,22 @@ app.get('/', function (req, res) {
 app.get('/profile.html', function (req, res) {
     if (!req.session.user) {
         res.redirect('/');
+    }
+    if (req.session.profil_pic) {
+        res.render('profile.html', {
+            firstname: req.session.firstname,
+            lastname: req.session.lastname,
+            location: req.session.location,
+            bio: req.session.bio,
+            profil_pic: req.session.profil_pic
+        })
     } else {
         res.render('profile.html', {
             firstname: req.session.firstname,
             lastname: req.session.lastname,
             location: req.session.location,
-            bio: req.session.bio
+            bio: req.session.bio,
+            profil_pic: 'img/no-pictures.png'
         })
     }
 });
@@ -142,6 +152,14 @@ app.get('/edit_profil.html', function (req, res) {
         res.render('edit_profil.html')
     }
 });
+
+app.get('/delete_account.html', function (req, res) {
+    if (!req.session.user) {
+        res.redirect('/');
+    } else {
+        res.render('delete_account.html')
+    }
+})
 
 app.get('/edit_account.html', function (req, res) {
     if (!req.session.user) {
@@ -212,6 +230,8 @@ app.post('/', function (req, res) {
             req.session.location = rows[0].location;
             req.session.sexe = rows[0].sexe;
             req.session.token = rows[0].token;
+            req.session.profil_pic = rows[0].profil_pic;
+            req.session.priority = 0;
             connection.query("UPDATE users SET login = ? WHERE username = ?", ["online", req.session.user])
             res.redirect('profile.html');
         } else {
@@ -275,6 +295,7 @@ app.post('/edit_profil.html', function (req, res) {
         var orientation = '';
         var location = '';
         var bio = '';
+        var cropped = 'uploads/' + req.session.user + '-' + uniqid() + '.png';
         if (req.fileValidationError) {
             file_upload = 'Wrong file type : File not uploaded';
         }
@@ -282,17 +303,33 @@ app.post('/edit_profil.html', function (req, res) {
             if (err) {
                 file_upload = 'A problem occurs : File not uploaded';
             } else {
-                req.file.path = req.file.path.replace('public/', '');
+                sharp(req.file.path).resize(500, 500).toFile('public/' + cropped, function (err) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        fs.unlink(req.file.path)
+                    }
+                });
                 if (!req.session.profil_pic) {
-                    connection.query("UPDATE users SET profil_pic = ? WHERE username = ?", [req.file.path, req.session.user], function (err) {
+                    connection.query("UPDATE users SET profil_pic = ? WHERE username = ?", [cropped, req.session.user], function (err) {
                         if (err) throw err;
                     })
-                    req.session.profil_pic = req.file.path;
+                    req.session.profil_pic = cropped;
                 }
-                connection.query("SELECT * FROM pictures WHERE username = ?", [req.session.user], function (err, rows) {
-                    if (err) throw err;
-                    if (rows.length < 5) {
-                        connection.query("INSERT INTO pictures(pic, username) VALUES(?,?)", [req.file.path, req.session.user], function (err) {
+                (function (callback) {
+                    connection.query("SELECT * FROM pictures WHERE username = ?", [req.session.user], function (err, rows) {
+                        if (err) throw err;
+                        else
+                            callback(rows.length);
+                    })
+                })(function (length) {
+                    console.log(length);
+                    if (length == 5) {
+                        req.session.priority = 1;
+                    }
+                    console.log(req.session.priority);
+                    if (length < 5) {
+                        connection.query("INSERT INTO pictures(pic, username) VALUES(?,?)", [cropped, req.session.user], function (err) {
                             if (err) throw err;
                         })
                     }
@@ -322,13 +359,20 @@ app.post('/edit_profil.html', function (req, res) {
 
             bio = 'Bio updated';
         }
-
-        res.render('edit_profil.html', {
-            'orientation': orientation,
-            'location': location,
-            'bio': bio,
-            'upload': file_upload
-        })
+        console.log(req.session.priority);
+        if (req.session.priority == 0) {
+            res.render('edit_profil.html', {
+                'orientation': orientation,
+                'location': location,
+                'bio': bio,
+                'upload': file_upload
+            })
+        } else {
+            res.render('edit_profil.html', {
+                'orientation': 'You can\'t have more than 5 pictures.'
+            })
+        }
+        req.session.priority = 0;
     })
 });
 
@@ -370,6 +414,23 @@ app.post('/edit_account.html', function (req, res) {
                 email: req.session.email
             })
         }
+    }
+})
+
+
+app.post('/delete_account.html', function (req, res) {
+    if (req.body.deleteAccount) {
+        connection.query("DELETE FROM users WHERE username = ?", [req.session.user], function (err) {
+            if (err) throw err;
+            else {
+                connection.query("DELETE FROM pictures WHERE username = ?", [req.session.user], function (err) {
+                    if (err) throw err;
+                    else {
+                        res.redirect('/logout.html')
+                    }
+                })
+            }
+        })
     }
 })
 

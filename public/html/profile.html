@@ -21,6 +21,7 @@
     <div class="separator"></div>
     <div class="site-content" align="center">
         <div class="usr" id="usr">
+            <img id="usr-pic" src="{{profil_pic}}">
             <div id="usr-info" class="usr-info" align="left">
                 <div class="usr-name">{{firstname}} {{lastname}}
                     <br>
@@ -43,7 +44,12 @@
             </div>
             <div class="relation">Kiefer vous follow</div>
         </div>
-        <div id="my_pictures" class="usr-set"> </div>
+        <div id="my_pictures" class="usr-set">
+            {{#pics0}}<img class="usr-set-img" src="{{pics0}}" alt="user-images" onclick="Changeprofile_pic(this)"> {{/pics0}} {{^pics0}}{{/pics0}} 
+            {{#pics1}}<img class="usr-set-img" src="{{pics1}}" alt="user-images" onclick="Changeprofile_pic(this)"> {{/pics1}} {{^pics1}}{{/pics1}} 
+            {{#pics2}}<img class="usr-set-img" src="{{pics2}}" alt="user-images" onclick="Changeprofile_pic(this)"> {{/pics2}} {{^pics2}}{{/pics2}} 
+            {{#pics3}}<img class="usr-set-img" src="{{pics3}}" alt="user-images" onclick="Changeprofile_pic(this)">{{/pics3}} {{^pics3}}{{/pics3}}
+        </div>
         <div class="bottom-bar" align="left">
             <div class="signaler"><a href="#">Signaler ce compte</a></div>
         </div>
