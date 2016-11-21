@@ -28,7 +28,7 @@
             <div class="band"><img src="/img/butt.png" alt="logo" width="250px">
                 <h1>Update Profil</h1>
             </div>
-            <form id="form" class="edit-profil" method="post" align="center">
+            <form id="form" class="edit-profil" method="post" align="center" action="/updates">
                 <label>Sexual orientation</label> Hetero
                 <input type="radio" name="orientation" value="hetero">Gay
                 <input type="radio" name="orientation" value="gay">Bi
@@ -52,7 +52,7 @@
             <div class="band"><img src="/img/photos-manager.png" alt="logo" width="250px">
                 <h1>Manage Photos</h1>
             </div>
-            <form id="form" class="edit-profil" method="post" align="center" enctype="multipart/form-data">
+            <form id="form" class="edit-profil" method="post" align="center" enctype="multipart/form-data" action="/file">
                 <label>Upload a photo</label>
                 <input class="input-file" type="file" name="userPhoto">
                 <br>

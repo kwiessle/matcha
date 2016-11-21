@@ -99,6 +99,7 @@
     margin-right: 40px;
     margin-top: 10px;
     vertical-align: middle;
+    height: 40px;
 }
 
 .reglage img {
@@ -144,16 +145,32 @@
 
 .usr-set {
     width: 100%;
-    margin-top: 5px;
     max-width: 1000px;
     font-size: 0;
+}
+
+.usr-set-img-bar {
+    background: #f9f9F9;
+    max-width: 490px;
+    display: inline-block;
+    margin: 5px;
+}
+
+.img-options input {
+    border: none;
+    padding: 10px;
+    width: 30px;
+    margin: 10px;
+}
+
+.img-options {
+    width: 50%;
+    display: inline-block;
 }
 
 .usr-set-img {
     width: 100%;
     display: inline-block;
-    max-width: 490px;
-    margin: 5px;
 }
 
 .input {

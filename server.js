@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    port: 8889,
-    //port: 3307,
+    //port: 8889,
+    port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -117,22 +117,37 @@ app.get('/', function (req, res) {
 app.get('/profile.html', function (req, res) {
     if (!req.session.user) {
         res.redirect('/');
-    }
-    if (req.session.profil_pic) {
-        res.render('profile.html', {
-            firstname: req.session.firstname,
-            lastname: req.session.lastname,
-            location: req.session.location,
-            bio: req.session.bio,
-            profil_pic: req.session.profil_pic
-        })
     } else {
-        res.render('profile.html', {
-            firstname: req.session.firstname,
-            lastname: req.session.lastname,
-            location: req.session.location,
-            bio: req.session.bio,
-            profil_pic: 'img/no-pictures.png'
+        connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.session.user, req.session.profil_pic], function (err, rows) {
+            if (err) throw err;
+            else {
+                for (var k in rows) {
+                    rows[k].pic = rows[k].pic.replace("uploads/", "");
+                }
+                if (req.session.profil_pic) {
+                    res.render('profile.html', {
+                        firstname: req.session.firstname,
+                        lastname: req.session.lastname,
+                        location: req.session.location,
+                        bio: req.session.bio,
+                        profil_pic: req.session.profil_pic,
+                        display_pictures: {
+                            infos: rows
+                        }
+                    })
+                } else {
+                    res.render('profile.html', {
+                        firstname: req.session.firstname,
+                        lastname: req.session.lastname,
+                        location: req.session.location,
+                        bio: req.session.bio,
+                        profil_pic: 'img/no-pictures.png',
+                        display_pictures: {
+                            infos: rows
+                        }
+                    })
+                }
+            }
         })
     }
 });
@@ -206,6 +221,15 @@ app.get('/change_password.html', function (req, res) {
 })
 
 
+app.get('/file', function (req, res) {
+    res.redirect('/edit_profil.html');
+})
+
+app.get('/updates', function (req, res) {
+    res.redirect('/edit_profil.html');
+})
+
+
 
 
 
@@ -230,6 +254,7 @@ app.post('/', function (req, res) {
             req.session.location = rows[0].location;
             req.session.sexe = rows[0].sexe;
             req.session.token = rows[0].token;
+            req.session.bio = rows[0].bio;
             req.session.profil_pic = rows[0].profil_pic;
             req.session.priority = 0;
             connection.query("UPDATE users SET login = ? WHERE username = ?", ["online", req.session.user])
@@ -255,7 +280,6 @@ app.post('/create_account.html', function (req, res) {
         req.body.password,
         req.body.confirm_password,
         req.body.sexe);
-    console.log(req.body.birthday);
     if (ret === 'SQL') {
         connection.query("SELECT * FROM users WHERE username = ?", [req.body.username], function (err, rows) {
             if (err) throw err;
@@ -289,12 +313,10 @@ app.post('/create_account.html', function (req, res) {
 })
 
 
-app.post('/edit_profil.html', function (req, res) {
+
+app.post('/file', function (req, res) {
     upload(req, res, function (err) {
         var file_upload = '';
-        var orientation = '';
-        var location = '';
-        var bio = '';
         var cropped = 'uploads/' + req.session.user + '-' + uniqid() + '.png';
         if (req.fileValidationError) {
             file_upload = 'Wrong file type : File not uploaded';
@@ -307,7 +329,7 @@ app.post('/edit_profil.html', function (req, res) {
                     if (err) {
                         console.log(err);
                     } else {
-                        fs.unlink(req.file.path)
+                        fs.unlinkSync(req.file.path)
                     }
                 });
                 if (!req.session.profil_pic) {
@@ -316,65 +338,59 @@ app.post('/edit_profil.html', function (req, res) {
                     })
                     req.session.profil_pic = cropped;
                 }
-                (function (callback) {
-                    connection.query("SELECT * FROM pictures WHERE username = ?", [req.session.user], function (err, rows) {
-                        if (err) throw err;
-                        else
-                            callback(rows.length);
-                    })
-                })(function (length) {
-                    console.log(length);
-                    if (length == 5) {
-                        req.session.priority = 1;
-                    }
-                    console.log(req.session.priority);
-                    if (length < 5) {
-                        connection.query("INSERT INTO pictures(pic, username) VALUES(?,?)", [cropped, req.session.user], function (err) {
-                            if (err) throw err;
+                connection.query("SELECT * FROM pictures WHERE username = ?", [req.session.user], function (err, rows) {
+                    if (err) throw err;
+                    else {
+                        if (rows.length < 5) {
+                            connection.query("INSERT INTO pictures(pic, username) VALUES(?,?)", [cropped, req.session.user], function (err) {
+                                if (err) throw err;
+                            })
+                            file_upload = 'File uploaded';
+                        } else {
+                            file_upload = 'You can\'t have more than 5 pictures';
+                        }
+                        res.render('edit_profil.html', {
+                            'orientation': file_upload
                         })
                     }
                 })
-                file_upload = 'File uploaded';
             }
         }
-        if (req.body.orientation) {
-            connection.query("UPDATE users SET sexual_or = ? WHERE username = ?", [req.body.orientatation, req.session.user], function (err) {
-                if (err) throw err;
-            })
-            orientation = 'Orientation updated';
-        }
-        if (req.body.location) {
-            connection.query("UPDATE users SET location = ? WHERE username = ?", [req.body.location, req.session.user], function (err) {
-                if (err) throw err;
-            })
-            req.session.location = req.body.location;
-
-            location = 'Location updated';
-        }
-        if (req.body.bio) {
-            connection.query("UPDATE users SET bio = ? WHERE username = ?", [req.body.bio, req.session.user], function (err) {
-                if (err) throw err;
-            })
-            req.session.bio = req.body.bio;
-
-            bio = 'Bio updated';
-        }
-        console.log(req.session.priority);
-        if (req.session.priority == 0) {
-            res.render('edit_profil.html', {
-                'orientation': orientation,
-                'location': location,
-                'bio': bio,
-                'upload': file_upload
-            })
-        } else {
-            res.render('edit_profil.html', {
-                'orientation': 'You can\'t have more than 5 pictures.'
-            })
-        }
-        req.session.priority = 0;
     })
-});
+})
+
+app.post('/updates', function (req, res) {
+    var orientation;
+    var location;
+    var bio;
+    if (req.body.orientation) {
+        connection.query("UPDATE users SET sexual_or = ? WHERE username = ?", [req.body.orientation, req.session.user], function (err) {
+            if (err) throw err;
+        })
+        orientation = 'Orientation updated';
+    }
+    if (req.body.location) {
+        connection.query("UPDATE users SET location = ? WHERE username = ?", [req.body.location, req.session.user], function (err) {
+            if (err) throw err;
+        })
+        req.session.location = req.body.location;
+
+        location = 'Location updated';
+    }
+    if (req.body.bio) {
+        connection.query("UPDATE users SET bio = ? WHERE username = ?", [req.body.bio, req.session.user], function (err) {
+            if (err) throw err;
+        })
+        req.session.bio = req.body.bio;
+
+        bio = 'Bio updated';
+    }
+    res.render('edit_profil.html', {
+        'orientation': orientation,
+        'location': location,
+        'bio': bio,
+    })
+})
 
 app.post('/edit_account.html', function (req, res) {
     if (req.body.sendEmail) {
@@ -496,6 +512,33 @@ app.post('/change_password.html', function (req, res) {
     res.render('change_password.html', {
         message: ret
     })
+})
+
+app.post('/change/:data', function (req, res) {
+    if (req.params.data) {
+        connection.query("UPDATE users SET profil_pic = ? WHERE username = ?", ["uploads/" + req.params.data, req.session.user], function (err) {
+            if (err) throw err;
+            else {
+                req.session.profil_pic = 'uploads/' + req.params.data;
+                res.redirect('/profile.html')
+            }
+        })
+    }
+})
+
+
+app.post('/delete/:data', function (req, res) {
+    if (req.params.data) {
+        connection.query("DELETE FROM pictures WHERE pic = ?", ['uploads/' + req.params.data], function (err) {
+            if (err) throw err;
+            else {
+                if ('uploads/' + req.params.data === req.session.profil_pic) {
+                    req.session.profil_pic.destroy;
+                }
+                res.redirect('/profile.html')
+            }
+        })
+    }
 })
 
 

@@ -1,0 +1,11 @@
+{{#display_pictures.infos}}
+<div class="usr-set-img-bar">
+    <img class="usr-set-img" src="uploads/{{pic}}" alt="user-images">
+    <form class="img-options" method="post" action="/change/{{pic}}">
+        <input class="f1" type="image" src="img/attachment.png" value="Set as Profil picture">
+    </form>
+    <form class="img-options" method="post" action="/delete/{{pic}}">
+        <input class="f2" type="image" src="img/attachment.png" value="Delete">
+    </form>
+</div>
+{{/display_pictures.infos}}
