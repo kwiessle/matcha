@@ -62,9 +62,9 @@ var upload = multer({
     }
 }).single('userPhoto');
 var sharp = require('sharp');
-
+var moment = require('moment');
 var create_account = require('./server/create_Account');
-
+var profile = require('./server/age');
 
 
 
@@ -82,8 +82,13 @@ connection.connect(function (err) {
     if (err) throw err;
 });
 connection.query("CREATE DATABASE IF NOT EXISTS matcha;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`users` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `firstname` VARCHAR(255) NOT NULL , `lastname` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `birthday` DATE NOT NULL , `email` VARCHAR(255) NOT NULL , `password` VARCHAR(255) NOT NULL , `sexe` VARCHAR(8) NOT NULL , `token` VARCHAR(255) NOT NULL , `validation` VARCHAR(1) NOT NULL DEFAULT '0' ,  `profil_pic` LONGTEXT DEFAULT NULL, `sexual_or` VARCHAR(10) NOT NULL DEFAULT 'bi' , `bio` VARCHAR(255) DEFAULT NULL , `location` VARCHAR(255) DEFAULT NULL , `tags` VARCHAR(255) DEFAULT NULL , `pop` INT(5) DEFAULT '0', login VARCHAR(255), PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`users` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `firstname` VARCHAR(255) NOT NULL , `lastname` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `birthday` DATE NOT NULL , `email` VARCHAR(255) NOT NULL , `password` VARCHAR(255) NOT NULL , `sexe` VARCHAR(8) NOT NULL , `token` VARCHAR(255) NOT NULL , `validation` VARCHAR(1) NOT NULL DEFAULT '0' ,  `profil_pic` LONGTEXT DEFAULT NULL, `sexual_or` VARCHAR(10) NOT NULL DEFAULT 'bi' , `bio` VARCHAR(255) DEFAULT NULL , `location` VARCHAR(255) DEFAULT NULL ,  `pop` INT(5) DEFAULT '0', login VARCHAR(255), `sessionID` VARCHAR(255) DEFAULT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`pictures` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `pic` LONGTEXT NOT NULL , `username` VARCHAR(255) NOT NULL,  PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`history` ( `visitor` VARCHAR(255) NOT NULL , `visited` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`liking` ( `liker` VARCHAR(255) NOT NULL , `liked` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`reports` ( `reporter` VARCHAR(255) NOT NULL , `reported` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`tags` ( `tag` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`matchs` ( `matcher` VARCHAR(255) NOT NULL , `matched` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
 connection.query("use matcha");
 
 
@@ -130,7 +135,9 @@ app.get('/profile.html', function (req, res) {
                         lastname: req.session.lastname,
                         location: req.session.location,
                         bio: req.session.bio,
+                        pop: req.session.pop,
                         profil_pic: req.session.profil_pic,
+                        birthday: profile.age(req.session.birthday) + ' ans ',
                         display_pictures: {
                             infos: rows
                         }
@@ -141,6 +148,7 @@ app.get('/profile.html', function (req, res) {
                         lastname: req.session.lastname,
                         location: req.session.location,
                         bio: req.session.bio,
+                        pop: req.session.pop,
                         profil_pic: 'img/no-pictures.png',
                         display_pictures: {
                             infos: rows
@@ -229,7 +237,108 @@ app.get('/updates', function (req, res) {
     res.redirect('/edit_profil.html');
 })
 
+app.get('/user.html/:user', function (req, res) {
+    if (!req.session.user) {
+        res.redirect('/');
+    } else {
+        if (req.params.user === req.session.user) {
+            res.redirect('/profile.html');
+        } else {
+            connection.query("SELECT * FROM history WHERE visitor = ? AND visited = ?", [req.session.user, req.params.user], function (err, rows) {
+                if (err) throw err;
+                if (!rows[0]) {
+                    connection.query("UPDATE users SET pop = pop + 2 WHERE username = ?", [req.params.user], function (err) {
+                        if (err) throw err;
+                    });
+                    connection.query("INSERT INTO history(visitor, visited) VALUES (?,?)", [req.session.user, req.params.user], function (err) {
+                        if (err) throw err;
+                    });
+                }
+            });
+            connection.query("SELECT * FROM users WHERE username = ?", [req.params.user], function (err, rows) {
+                if (err) throw err;
+                if (!rows.length) {
+                    res.redirect('/match.html');
+                } else {
+                    var infos = rows[0];
+                    infos.birth = profile.age(rows[0].birthday);
+                    connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.session.user, req.params.user], function (err, data) {
+                        if (err) throw err;
+                        connection.query("SELECT * FROM matchs WHERE (matcher = ? AND matched = ?) OR (matcher = ? AND matched = ?)", [req.session.user, req.params.user, req.params.user, req.session.user], function (err, match) {
+                            connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.params.user, rows[0].profil_pic], function (err, row) {
+                                if (err) throw err;
+                                if (data[0]) {
+                                    infos.follow = "you like " + rows[0].firstname;
+                                }
+                                if (match[0]) {
+                                    infos.follow = "you match with " + rows[0].firstname;
+                                }
+                                for (var k in row) {
+                                    row[k].pic = row[k].pic.replace("uploads/", "");
+                                }
+                                if (!infos.profil_pic) {
+                                    infos.profil_pic = 'img/no-pictures.png';
+                                }
+                                res.render('user.html', {
+                                    firstname: infos.firstname,
+                                    lastname: infos.lastname,
+                                    location: infos.location,
+                                    profil_pic: infos.profil_pic,
+                                    birthday: infos.birth + ' ans ',
+                                    pop: infos.pop,
+                                    bio: infos.bio,
+                                    display_pictures_users: {
+                                        infos: row
+                                    }
+                                });
+                            });
+                        });
+                    });
+                }
+            });
+        }
+    }
+})
 
+app.get("/history.html", function (req, res) {
+    var infos = [];
+    if (!req.session.user) {
+        res.redirect("/");
+    } else {
+        connection.query("SELECT * FROM history WHERE visited =?", [req.session.user], function (err, rows) {
+            if (err) throw err;
+            if (rows[0]) {
+                for (var k in rows) {
+                    (function (k, callback) {
+                        connection.query("SELECT * FROM users WHERE username = ?", [rows[k].visitor], function (err, row) {
+                            if (err) throw err;
+                            else {
+                                infos[k] = row[0];
+                                infos[k].class = (Number(k) % 2) + 1;
+                                infos[k].birth = profile.age(row[0].birthday);
+                                if (!infos[k].profil_pic)
+                                    infos[k].profil_pic = 'img/no-pictures.png';
+                                if (!rows[Number(k) + 1]) {
+                                    callback();
+                                }
+                            }
+                        });
+                    })(k, function () {
+                        res.render("history.html", {
+                            homepage: {
+                                infos: infos
+                            }
+                        })
+                    });
+                }
+            } else {
+                res.render("history.html", {
+                    message: "Nobody have visited your profil"
+                })
+            }
+        })
+    }
+});
 
 
 
@@ -256,6 +365,7 @@ app.post('/', function (req, res) {
             req.session.token = rows[0].token;
             req.session.bio = rows[0].bio;
             req.session.profil_pic = rows[0].profil_pic;
+            req.session.pop = rows[0].pop;
             req.session.priority = 0;
             connection.query("UPDATE users SET login = ? WHERE username = ?", ["online", req.session.user])
             res.redirect('profile.html');
@@ -312,8 +422,6 @@ app.post('/create_account.html', function (req, res) {
     }
 })
 
-
-
 app.post('/file', function (req, res) {
     upload(req, res, function (err) {
         var file_upload = '';
@@ -338,7 +446,7 @@ app.post('/file', function (req, res) {
                     })
                     req.session.profil_pic = cropped;
                 }
-                connection.query("SELECT * FROM pictures WHERE username = ?", [req.session.user], function (err, rows) {
+                connection.query("SELECT * FROM pictures WHERE username = ?", [req.session.user], function queryCB(err, rows) {
                     if (err) throw err;
                     else {
                         if (rows.length < 5) {
@@ -532,14 +640,15 @@ app.post('/delete/:data', function (req, res) {
         connection.query("DELETE FROM pictures WHERE pic = ?", ['uploads/' + req.params.data], function (err) {
             if (err) throw err;
             else {
-                if ('uploads/' + req.params.data === req.session.profil_pic) {
-                    req.session.profil_pic.destroy;
-                }
+                fs.unlinkSync('public/uploads/' + req.params.data);
                 res.redirect('/profile.html')
             }
         })
     }
 })
+
+
+
 
 
 
