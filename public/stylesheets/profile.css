@@ -94,6 +94,30 @@
     margin-left: 10px;
 }
 
+.match-btn {
+    height: 50px;
+    width: 180px;
+    display: inline-block;
+    float: left;
+}
+
+.match-btn img {
+    height: 30px;
+    margin-left: 30px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.match-btn a {
+    color: #acaaaa;
+    margin-right: 30px;
+    font-size: 15px;
+}
+
+.match-btn:hover a {
+    color: #7fc4ff;
+}
+
 .reglage {
     display: inline-block;
     float: right;
@@ -131,8 +155,8 @@
     width: 100%;
     max-width: 990px;
     background: white;
-    height: 50px;
     line-height: 50px;
+    height: 50px;
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
 }
@@ -195,6 +219,7 @@
     padding: 0;
     border: none;
     padding: 8px;
+    margin-top: 8px;
     border-radius: 5px;
     color: white;
     font-size: 15px;
@@ -205,6 +230,7 @@
 
 .form-bar {
     margin-left: 20px;
+    height: 50px;
     width: 200px;
     display: inline-block;
 }
@@ -231,11 +257,28 @@
     margin-right: 40px;
 }
 
+.dontShow {
+    display: none;
+}
+
 @media only screen and (max-width: 1000px) {
     .top-bar,
     .bottom-bar {
         max-width: 490px;
         width: 100%;
+    }
+    .reglage {
+        float: left;
+        margin-left: 40px;
+    }
+    .reglage a {
+        margin-right: 80px;
+    }
+    .top-bar {
+        height: 100px;
+    }
+    .reg-name {
+        margin-left: 10px;
     }
     .usr-set-img {
         margin: 0;

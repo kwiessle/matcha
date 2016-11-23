@@ -34,10 +34,10 @@
             </div>
         </div>
         <div class="top-bar" align="left">
-            <form class="form-bar" method="post">
-                <input class="input d1" type="submit" name="pov" value="follow">
-                <input class="input d2" type="submit" name="pov" value="unfollow">
-                <div class="relation">{{follow}}</div>
+            <form class="form-bar" method="post" action="/liker/{{liker}}">
+                <input id="like" class="input d1 {{liker_class1}}" type="submit" name="pov" value="follow">
+                <input class="input d2 {{liker_class2}}" type="submit" name="pov" value="unfollow">
+                <div class="relation">{{follow}} </div>
         </div>
         <div id="my_pictures" class="usr-set"> {{>display_pictures_users}} </div>
         <div class="bottom-bar" align="left">

@@ -264,34 +264,71 @@ app.get('/user.html/:user', function (req, res) {
                     infos.birth = profile.age(rows[0].birthday);
                     connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.session.user, req.params.user], function (err, data) {
                         if (err) throw err;
-                        connection.query("SELECT * FROM matchs WHERE (matcher = ? AND matched = ?) OR (matcher = ? AND matched = ?)", [req.session.user, req.params.user, req.params.user, req.session.user], function (err, match) {
-                            connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.params.user, rows[0].profil_pic], function (err, row) {
-                                if (err) throw err;
-                                if (data[0]) {
-                                    infos.follow = "you like " + rows[0].firstname;
-                                }
-                                if (match[0]) {
-                                    infos.follow = "you match with " + rows[0].firstname;
-                                }
-                                for (var k in row) {
-                                    row[k].pic = row[k].pic.replace("uploads/", "");
-                                }
-                                if (!infos.profil_pic) {
-                                    infos.profil_pic = 'img/no-pictures.png';
-                                }
-                                res.render('user.html', {
-                                    firstname: infos.firstname,
-                                    lastname: infos.lastname,
-                                    location: infos.location,
-                                    profil_pic: infos.profil_pic,
-                                    birthday: infos.birth + ' ans ',
-                                    pop: infos.pop,
-                                    bio: infos.bio,
-                                    display_pictures_users: {
-                                        infos: row
+                        connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.session.user, req.params.user], function (err, match) {
+                            if (err) throw err;
+                            if (match.length) {
+                                connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.params.user, rows[0].profil_pic], function (err, row) {
+                                    if (err) throw err;
+                                    if (data[0]) {
+                                        infos.follow = "you like " + rows[0].firstname;
                                     }
+                                    if (match[0]) {
+                                        infos.follow = "you match with " + rows[0].firstname;
+                                    }
+                                    for (var k in row) {
+                                        row[k].pic = row[k].pic.replace("uploads/", "");
+                                    }
+                                    if (!infos.profil_pic) {
+                                        infos.profil_pic = 'img/no-pictures.png';
+                                    }
+                                    res.render('user.html', {
+                                        firstname: infos.firstname,
+                                        lastname: infos.lastname,
+                                        location: infos.location,
+                                        profil_pic: infos.profil_pic,
+                                        birthday: infos.birth + ' ans ',
+                                        liker: infos.username,
+                                        liker_class1: 'dontShow',
+                                        pop: infos.pop,
+                                        bio: infos.bio,
+                                        display_pictures_users: {
+                                            infos: row
+                                        }
+                                    });
                                 });
-                            });
+                            } else {
+                                {
+                                    connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.params.user, rows[0].profil_pic], function (err, row) {
+                                        if (err) throw err;
+                                        if (data[0]) {
+                                            infos.follow = "you like " + rows[0].firstname;
+                                        }
+                                        if (match[0]) {
+                                            infos.follow = "you match with " + rows[0].firstname;
+                                        }
+                                        for (var k in row) {
+                                            row[k].pic = row[k].pic.replace("uploads/", "");
+                                        }
+                                        if (!infos.profil_pic) {
+                                            infos.profil_pic = 'img/no-pictures.png';
+                                        }
+                                        res.render('user.html', {
+                                            firstname: infos.firstname,
+                                            lastname: infos.lastname,
+                                            location: infos.location,
+                                            profil_pic: infos.profil_pic,
+                                            birthday: infos.birth + ' ans ',
+                                            liker: infos.username,
+                                            liker_class2: 'dontShow',
+                                            pop: infos.pop,
+                                            bio: infos.bio,
+                                            display_pictures_users: {
+                                                infos: row
+                                            }
+                                        });
+                                    });
+                                }
+                            }
                         });
                     });
                 }
@@ -381,31 +418,31 @@ app.post('/', function (req, res) {
 
 app.post('/create_account.html', function (req, res) {
     var ret = create_account.form_checker(
-        req.body.firstname,
-        req.body.lastname,
-        req.body.birthday,
-        req.body.username,
-        req.body.email,
-        req.body.confirm_email,
-        req.body.password,
-        req.body.confirm_password,
+        req.body.firstname.trim(),
+        req.body.lastname.trim(),
+        req.body.birthday.trim(),
+        req.body.username.trim(),
+        req.body.email.trim(),
+        req.body.confirm_email.trim(),
+        req.body.password.trim(),
+        req.body.confirm_password.trim(),
         req.body.sexe);
     if (ret === 'SQL') {
-        connection.query("SELECT * FROM users WHERE username = ?", [req.body.username], function (err, rows) {
+        connection.query("SELECT * FROM users WHERE username = ?", [req.body.username.trim()], function (err, rows) {
             if (err) throw err;
             if (rows.length) {
                 res.render('create_account.html', {
                     'message': 'Account already registred'
                 })
             } else {
-                connection.query("SELECT * FROM users WHERE email = ?", [req.body.email], function (err, rows) {
+                connection.query("SELECT * FROM users WHERE email = ?", [req.body.email.trim()], function (err, rows) {
                     if (err) throw err;
                     if (rows.length) {
                         res.render('create_account.html', {
                             'message': 'Email already registred'
                         })
                     } else {
-                        connection.query("INSERT INTO users(firstname, lastname, birthday, username, email, sexe, password, token) VALUES (?,?,?,?,?,?,?,?)", [req.body.firstname, req.body.lastname, new Date(req.body.birthday), req.body.username, req.body.email, req.body.sexe, md5(req.body.password), uniqid()], function (err, rows) {
+                        connection.query("INSERT INTO users(firstname, lastname, birthday, username, email, sexe, password, token) VALUES (?,?,?,?,?,?,?,?)", [req.body.firstname.trim(), req.body.lastname.trim(), new Date(req.body.birthday.trim()), req.body.username.trim(), req.body.email.trim(), req.body.sexe.trim(), md5(req.body.password.trim()), uniqid()], function (err, rows) {
                             if (err) throw err;
                             res.render('create_account.html', {
                                 'message': 'Your account has been created'
@@ -463,6 +500,10 @@ app.post('/file', function (req, res) {
                     }
                 })
             }
+        } else {
+            res.render('edit_profil.html', {
+                orientation: 'No file selected'
+            })
         }
     })
 })
@@ -648,6 +689,41 @@ app.post('/delete/:data', function (req, res) {
 })
 
 
+app.post('/liker/:user', function (req, res) {
+    if (req.params.user) {
+        if (req.body.pov === 'follow') {
+            connection.query('SELECT username FROM users WHERE username = ?', [req.params.user], function (err, rows) {
+                if (err) throw err;
+                else {
+                    connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.session.user, req.params.user], function (err, rows) {
+                        if (err) throw err;
+                        if (!rows.length) {
+                            connection.query("INSERT INTO liking(liker, liked) VALUES(?, ?)", [req.session.user, req.params.user], function (err) {
+                                if (err) throw err;
+                                else {
+                                    res.redirect('/user.html/' + req.params.user)
+                                }
+                            })
+                        } else {
+                            console.log('already liked this fdp');
+                            res.redirect('/user.html/' + req.params.user)
+                        }
+                    })
+                }
+            })
+        }
+        if (req.body.pov === 'unfollow') {
+            connection.query("DELETE FROM liking WHERE liker = ? AND liked = ?", [req.session.user, req.params.user], function (err, rows) {
+                if (err) throw err;
+                else {
+                    res.redirect('/user.html/' + req.params.user)
+                }
+            })
+        }
+    } else {
+        res.redirect('/profile.html')
+    }
+})
 
 
 
@@ -657,7 +733,12 @@ app.post('/delete/:data', function (req, res) {
 
 
 
-
 https.createServer(options, app, function (req, res) {
     res.writeHead(200);
 }).listen(4433);
+
+
+
+
+
+/*    S  O  C  K  E  T  S     */
