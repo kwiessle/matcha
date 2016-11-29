@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    port: 8889,
-    //port: 3307,
+    //port: 8889,
+    port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -196,7 +196,7 @@ app.get('/edit_account.html', function (req, res) {
 })
 
 app.get('/logout.html', function (req, res) {
-    connection.query("UPDATE users SET login = ? WHERE username = ?", ["offline", req.session.user])
+    connection.query("UPDATE users SET login = ? WHERE username = ?", [new Date().toISOString().slice(0, 10), req.session.user])
     req.session.destroy(function (err) {
         if (err) throw err
         res.redirect('/');
@@ -297,6 +297,7 @@ app.get('/user.html/:user', function (req, res) {
                                             liker: infos.username,
                                             liker_class1: 'dontShow',
                                             relation: relation,
+                                            status: infos.login,
                                             pop: infos.pop,
                                             bio: infos.bio,
                                             display_pictures_users: {
@@ -336,6 +337,7 @@ app.get('/user.html/:user', function (req, res) {
                                                 liker: infos.username,
                                                 liker_class2: 'dontShow',
                                                 relation: relation,
+                                                status: infos.login,
                                                 pop: infos.pop,
                                                 bio: infos.bio,
                                                 display_pictures_users: {
@@ -494,6 +496,57 @@ app.get("/history.html", function (req, res) {
     }
 });
 
+app.get("/blocked.html", function (req, res) {
+    var infos = [];
+    if (!req.session.user) {
+        res.redirect("/");
+    } else {
+        connection.query("SELECT * FROM block WHERE blocker =?", [req.session.user], function (err, rows) {
+            if (err) throw err;
+            if (rows[0]) {
+                for (var k in rows) {
+                    (function (k, callback) {
+                        connection.query("SELECT * FROM users WHERE username = ?", [rows[k].blocked], function (err, row) {
+                            if (err) throw err;
+                            else {
+                                infos[k] = row[0];
+                                infos[k].class = (Number(k) % 2) + 1;
+                                infos[k].birth = profile.age(row[0].birthday);
+                                if (!infos[k].profil_pic)
+                                    infos[k].profil_pic = 'img/no-pictures.png';
+                                if (!rows[Number(k) + 1]) {
+                                    callback();
+                                }
+                            }
+                        });
+                    })(k, function () {
+                        res.render("blocked.html", {
+                            blockpage: {
+                                infos: infos
+                            }
+                        })
+                    });
+                }
+            } else {
+                res.render("blocked.html", {
+                    message: "You don\'t block any user yet"
+                })
+            }
+        })
+    }
+});
+
+
+app.get('/unblock/:user', function (req, res) {
+    if (!req.params.user) {
+        res.redirect('/profile.html')
+    } else {
+        connection.query("DELETE FROM block WHERE blocker = ? AND blocked = ?", [req.session.user, req.params.user], function (err) {
+            if (err) throw err;
+            res.redirect('/blocked.html')
+        })
+    }
+})
 
 app.get('/error.html', function (req, res) {
     if (req.session.user) {
@@ -502,6 +555,99 @@ app.get('/error.html', function (req, res) {
         res.redirect('/')
     }
 
+})
+
+app.get('/feed.html', function (req, res) {
+    if (req.session.user) {
+        if (req.session.profil_pic) {
+            res.render('feed.html')
+        } else {
+            res.redirect('/error.html')
+        }
+    } else {
+        res.redirect('/')
+    }
+})
+
+app.get("/message.html", function (req, res) {
+    var infos = [];
+    var infos_tmp = [];
+    if (!req.session.user) {
+        res.redirect("/");
+    } else {
+        connection.query("SELECT * FROM matchs WHERE matcher = ? OR matched = ? ", [req.session.user, req.session.user], function (err, rows) {
+            if (err) throw err;
+            if (rows[0]) {
+                for (var k in rows) {
+                    (function (k) {
+                        if (rows[k].matcher !== req.session.user) infos_tmp[k] = rows[k].matcher;
+                        else if (rows[k].matched !== req.session.user) infos_tmp[k] = rows[k].matched;
+                    })(k);
+                }
+                for (var j in infos_tmp) {
+                    (function (j, callback) {
+                        connection.query("SELECT * FROM users WHERE username = ?", [infos_tmp[j]], function (err, data) {
+                            infos[j] = data[0];
+                            infos[j].class = (Number(j) % 2) + 1;
+                            if (!infos[j].profil_pic) {
+                                infos[j].profil_pic = 'img/no-pictures.png';
+                            }
+                            if (!infos_tmp[Number(j) + 1]) {
+                                callback();
+                            }
+                        })
+                    })(j, function () {
+                        res.render("message.html", {
+                            message: {
+                                infos: infos
+                            }
+                        })
+                    });
+                }
+            } else {
+                res.render("message.html", {});
+            }
+        })
+    }
+})
+
+app.get("/message.html/:user", function (req, res) {
+    var infos = [];
+    var infos_tmp = [];
+    if (!req.session.user) {
+        res.redirect("/");
+    } else {
+        connection.query("SELECT * FROM matchs WHERE matcher = ? OR matched = ? ", [req.session.user, req.session.user], function (err, rows) {
+            if (err) throw err;
+            for (var k in rows) {
+                (function (k) {
+                    if (rows[k].matcher !== req.session.user) infos_tmp[k] = rows[k].matcher;
+                    else if (rows[k].matched !== req.session.user) infos_tmp[k] = rows[k].matched;
+                })(k);
+            }
+            for (var j in infos_tmp) {
+                (function (j, callback) {
+                    connection.query("SELECT * FROM users WHERE username = ?", [infos_tmp[j]], function (err, data) {
+                        infos[j] = data[0];
+                        if (!infos[j].profil_pic) {
+                            infos[j].profil_pic = 'img/no-pictures.png';
+                        }
+                        infos[j].class = (Number(j) % 2) + 1;
+                        if (!infos_tmp[Number(j) + 1]) {
+                            callback();
+                        }
+                    })
+                })(j, function () {
+                    res.render("message.html", {
+                        chatwithme: req.params.user,
+                        message: {
+                            infos: infos
+                        }
+                    })
+                });
+            }
+        })
+    }
 })
 
 /*     P  A  G  E  S      M  A  N  I  P  U  L  A  T  I  O  N  S     -     E X P R E S S   -    P  O  S  T    */
@@ -641,6 +787,7 @@ app.post('/updates', function (req, res) {
     var fname;
     var lname;
     if (req.body.firstname) {
+        node
         connection.query("UPDATE users SET firstname = ? WHERE username = ?", [req.body.firstname, req.session.user], function (err) {
             if (err) throw err;
         })
@@ -895,6 +1042,55 @@ app.post('/liker/:user', function (req, res) {
         }
     } else {
         res.redirect('/profile.html')
+    }
+})
+
+app.post('/blocker/:user', function (req, res) {
+    if (!req.params.user) {
+        res.redirect('/profil.html')
+    } else {
+        if (req.body.pov === 'Block') {
+            connection.query("SELECT username FROM users WHERE username = ?", [req.params.user], function (err, rows) {
+                if (rows.length) {
+                    connection.query("SELECT * from block WHERE blocker = ? AND blocked = ?", [req.session.user, req.params.user],
+                        function (err, rows) {
+                            if (!rows.length) {
+                                connection.query("INSERT INTO block(blocker, blocked) VALUES(?,?)", [req.session.user, req.params.user], function (err) {
+                                    if (err) throw err;
+                                    else {
+                                        res.redirect('/user.html/' + req.params.user)
+                                    }
+                                })
+                            } else {
+                                res.redirect('/user.html/' + req.params.user)
+                            }
+                        })
+                } else {
+                    res.redirect('/profile.html')
+                }
+            })
+        }
+        if (req.body.pov === 'Report') {
+            connection.query("SELECT username FROM users WHERE username = ?", [req.params.user], function (err, rows) {
+                if (err) throw err;
+                if (rows.length) {
+                    connection.query("SELECT * FROM reports WHERE reporter = ? AND reported = ?", [req.session.user, req.params.user], function (err, rows) {
+                        if (!rows.length) {
+                            connection.query("INSERT INTO reports(reporter, reported) VALUES(?,?)", [req.session.user, req.params.user], function (err) {
+                                if (err) throw err;
+                                else {
+                                    res.redirect('/user.html/' + req.params.user)
+                                }
+                            })
+                        } else {
+                            res.redirect('/user.html/' + req.params.user)
+                        }
+                    })
+                } else {
+                    res.redirect('/profile.html')
+                }
+            })
+        }
     }
 })
 

@@ -6,6 +6,7 @@
     <title>Matcha | Users</title>
     <link href="/stylesheets/main.css" rel="stylesheet">
     <link href="/stylesheets/profile.css" rel="stylesheet">
+
 </head>
 
 <body>
@@ -26,7 +27,7 @@
                 <div class="usr-name">{{firstname}} {{lastname}}
                     <br>
                     <div class="usr-age">{{birthday}} {{location}}</div>
-                    <div class="online">{{login}}</div>
+                    <div id="status" class="online">{{status}}</div>
                 </div>
                 <div class="bio" align="center">Bio</div>
                 <div class="usr-bio-text">{{bio}}</div>
@@ -42,7 +43,7 @@
         </div>
         <div id="my_pictures" class="usr-set"> {{>display_pictures_users}} </div>
         <div class="bottom-bar" align="left">
-            <form class="form-bar" method="post" action="/liker/{{liker}}">
+            <form class="form-bar" method="post" action="/blocker/{{liker}}">
                 <input class="input d2 input-fix" type="submit" name="pov" value="Block">
                 <input class="input d2 input-fix" type="submit" name="pov" value="Report">
             </form>
@@ -51,6 +52,7 @@
         <div class="separator"></div>
         <div class="separator"></div>
     </div>
+    <script src="/js/status.js"></script>
 </body>
 
 </html>

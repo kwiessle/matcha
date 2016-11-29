@@ -47,6 +47,11 @@
     border: 3px solid white;
 }
 
+.a1:hover,
+.a2:hover {
+    background: #c4e4ff;
+}
+
 .contact img {
     width: 50px;
     border-radius: 50%;
@@ -76,8 +81,9 @@
 .message {
     width: 100%;
     background: white;
-    min-height: 80%;
     max-width: 600px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 
 .onglet-2 {
@@ -96,7 +102,6 @@
 .line {
     width: 100%;
     height: 30px;
-    background: green;
     display: block;
 }
 
@@ -130,14 +135,30 @@
     border-bottom-right-radius: 0px;
 }
 
+.message-area textarea,
+.message-area input {
+    vertical-align: bottom;
+    margin-bottom: 5px;
+}
+
+.message-area input {
+    margin-left: 20px;
+}
+
 textarea {
-    height: 15%;
+    height: 5%;
     resize: none;
-    font-size: 20px;
-    width: 80%;
+    font-size: 15px;
+    width: 75%;
     background: rgba(145, 188, 255, 0.22);
     border: none;
-    margin-top: 40px;
+    margin-top: 20px;
+    padding: 5px;
+}
+
+#msgtpl {
+    height: 600px;
+    border-bottom: 10px solid #c3d1dd;
 }
 
 #send {

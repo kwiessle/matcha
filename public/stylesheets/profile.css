@@ -106,6 +106,10 @@
     float: left;
 }
 
+.match-btn-fix {
+    float: right;
+}
+
 .match-btn img {
     height: 30px;
     margin-left: 30px;
@@ -121,6 +125,10 @@
 
 .match-btn:hover a {
     color: #7fc4ff;
+}
+
+.match-btn-fix a:hover {
+    color: #e34444;
 }
 
 .reglage {
@@ -184,6 +192,7 @@
 
 .signaler {
     margin-left: 40px;
+    display: inline-block;
 }
 
 .signaler a {
@@ -201,8 +210,8 @@
 }
 
 .usr-set-img-bar {
-    border-top: 2.5px solid #DEDEDE;
-    border-bottom: 2.5px solid #DEDEDE;
+    border-top: 2.5px solid #c3d1dd;
+    border-bottom: 2.5px solid #c3d1dd;
     background: white;
     max-width: 490px;
     display: inline-block;
@@ -231,7 +240,7 @@
 
 .options-bar {
     background: white;
-    border-top: 10px solid #dedede;
+    border-top: 10px solid #c3d1dd;
 }
 
 .input {
