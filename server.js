@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    //port: 8889,
-    port: 3307,
+    port: 8889,
+    //port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -89,6 +89,7 @@ connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`liking` ( `liker` VARCHAR
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`reports` ( `reporter` VARCHAR(255) NOT NULL , `reported` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`tags` ( `tag` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`matchs` ( `matcher` VARCHAR(255) NOT NULL , `matched` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`block` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `blocker` VARCHAR(255) NOT NULL , `blocked` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;");
 connection.query("use matcha");
 
 
@@ -281,20 +282,28 @@ app.get('/user.html/:user', function (req, res) {
                                     if (!infos.profil_pic) {
                                         infos.profil_pic = 'img/no-pictures.png';
                                     }
-                                    res.render('user.html', {
-                                        firstname: infos.firstname,
-                                        lastname: infos.lastname,
-                                        location: infos.location,
-                                        profil_pic: infos.profil_pic,
-                                        birthday: infos.birth + ' ans ',
-                                        liker: infos.username,
-                                        liker_class1: 'dontShow',
-                                        pop: infos.pop,
-                                        bio: infos.bio,
-                                        display_pictures_users: {
-                                            infos: row
+                                    connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
+                                        if (err) throw err;
+                                        var relation = '';
+                                        if (rows.length) {
+                                            relation = req.params.user + ' you follow';
                                         }
-                                    });
+                                        res.render('user.html', {
+                                            firstname: infos.firstname,
+                                            lastname: infos.lastname,
+                                            location: infos.location,
+                                            profil_pic: infos.profil_pic,
+                                            birthday: infos.birth + ' ans ',
+                                            liker: infos.username,
+                                            liker_class1: 'dontShow',
+                                            relation: relation,
+                                            pop: infos.pop,
+                                            bio: infos.bio,
+                                            display_pictures_users: {
+                                                infos: row
+                                            }
+                                        });
+                                    })
                                 });
                             } else {
                                 {
@@ -312,20 +321,28 @@ app.get('/user.html/:user', function (req, res) {
                                         if (!infos.profil_pic) {
                                             infos.profil_pic = 'img/no-pictures.png';
                                         }
-                                        res.render('user.html', {
-                                            firstname: infos.firstname,
-                                            lastname: infos.lastname,
-                                            location: infos.location,
-                                            profil_pic: infos.profil_pic,
-                                            birthday: infos.birth + ' ans ',
-                                            liker: infos.username,
-                                            liker_class2: 'dontShow',
-                                            pop: infos.pop,
-                                            bio: infos.bio,
-                                            display_pictures_users: {
-                                                infos: row
+                                        connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
+                                            if (err) throw err;
+                                            var relation = '';
+                                            if (rows.length) {
+                                                relation = req.params.user + ' you follow';
                                             }
-                                        });
+                                            res.render('user.html', {
+                                                firstname: infos.firstname,
+                                                lastname: infos.lastname,
+                                                location: infos.location,
+                                                profil_pic: infos.profil_pic,
+                                                birthday: infos.birth + ' ans ',
+                                                liker: infos.username,
+                                                liker_class2: 'dontShow',
+                                                relation: relation,
+                                                pop: infos.pop,
+                                                bio: infos.bio,
+                                                display_pictures_users: {
+                                                    infos: row
+                                                }
+                                            });
+                                        })
                                     });
                                 }
                             }
@@ -336,6 +353,106 @@ app.get('/user.html/:user', function (req, res) {
         }
     }
 })
+
+
+
+app.get("/matchs.html", function (req, res) {
+    var infos = [];
+    if (!req.session.user) {
+        res.redirect("/");
+    } else {
+        connection.query("SELECT * FROM matchs WHERE matcher = ? OR matched = ? ", [req.session.user, req.session.user], function (err, rows) {
+            if (err) throw err;
+            var matchs = [];
+            for (var k in rows) {
+                if (rows[k].matcher === req.session.user) {
+                    matchs[k] = rows[k].matched;
+                } else {
+                    matchs[k] = rows[k].matcher;
+                }
+                /*console.log('matcher :    ' + rows[k].matcher);
+                console.log('matched :    ' + rows[k].matched);*/
+                console.log(matchs[k]);
+            }
+            if (matchs[0]) {
+                for (var k in matchs) {
+                    (function (k, callback) {
+                        connection.query("SELECT * FROM users WHERE username = ?", [matchs[k]], function (err, row) {
+                            if (err) throw err;
+                            else {
+                                infos[k] = row[0];
+                                infos[k].class = (Number(k) % 2) + 1;
+                                infos[k].birth = profile.age(row[0].birthday);
+                                if (!infos[k].profil_pic)
+                                    infos[k].profil_pic = 'img/no-pictures.png';
+                                if (!rows[Number(k) + 1]) {
+                                    callback();
+                                }
+                            }
+                        });
+                    })(k, function () {
+                        res.render("matchs.html", {
+                            homepage: {
+                                infos: infos
+                            }
+                        })
+                    });
+                }
+            } else {
+                res.render("matchs.html", {
+                    message: "You don't have match yet"
+                })
+            }
+        })
+    }
+});
+
+app.get("/followers.html", function (req, res) {
+    var infos = [];
+    if (!req.session.user) {
+        res.redirect("/");
+    } else {
+        connection.query("SELECT * FROM liking WHERE  liked = ? ", [req.session.user], function (err, rows) {
+            if (err) throw err;
+            var matchs = [];
+            for (var k in rows) {
+                matchs[k] = rows[k].liker;
+            }
+            if (matchs[0]) {
+                for (var k in matchs) {
+                    (function (k, callback) {
+                        connection.query("SELECT * FROM users WHERE username = ?", [matchs[k]], function (err, row) {
+                            if (err) throw err;
+                            else {
+                                infos[k] = row[0];
+                                infos[k].class = (Number(k) % 2) + 1;
+                                infos[k].birth = profile.age(row[0].birthday);
+                                if (!infos[k].profil_pic)
+                                    infos[k].profil_pic = 'img/no-pictures.png';
+                                if (!rows[Number(k) + 1]) {
+                                    callback();
+                                }
+                            }
+                        });
+                    })(k, function () {
+                        res.render("followers.html", {
+                            homepage: {
+                                infos: infos
+                            }
+                        })
+                    });
+                }
+            } else {
+                res.render("followers.html", {
+                    message: "You don't have followers yet"
+                })
+            }
+        })
+    }
+});
+
+
+
 
 app.get("/history.html", function (req, res) {
     var infos = [];
@@ -378,7 +495,14 @@ app.get("/history.html", function (req, res) {
 });
 
 
+app.get('/error.html', function (req, res) {
+    if (req.session.user) {
+        res.render('error.html')
+    } else {
+        res.redirect('/')
+    }
 
+})
 
 /*     P  A  G  E  S      M  A  N  I  P  U  L  A  T  I  O  N  S     -     E X P R E S S   -    P  O  S  T    */
 
@@ -389,7 +513,9 @@ app.get("/history.html", function (req, res) {
 
 
 app.post('/', function (req, res) {
-    connection.query("SELECT * FROM users WHERE username = ? AND password = ?", [req.body.username, md5(req.body.password)], function (err, rows) {
+    var username = req.body.username;
+    var password = md5(req.body.password);
+    connection.query("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], function (err, rows) {
         if (err) throw err;
         if (rows.length == 1) {
             req.session.firstname = rows[0].firstname;
@@ -502,7 +628,7 @@ app.post('/file', function (req, res) {
             }
         } else {
             res.render('edit_profil.html', {
-                orientation: 'No file selected'
+                orientation: 'No file selected or Wrong Type'
             })
         }
     })
@@ -512,6 +638,22 @@ app.post('/updates', function (req, res) {
     var orientation;
     var location;
     var bio;
+    var fname;
+    var lname;
+    if (req.body.firstname) {
+        connection.query("UPDATE users SET firstname = ? WHERE username = ?", [req.body.firstname, req.session.user], function (err) {
+            if (err) throw err;
+        })
+        req.session.firstname = req.body.firstname;
+        fname = 'First Name Updated';
+    }
+    if (req.body.lastname) {
+        connection.query("UPDATE users SET lastname = ? WHERE username = ?", [req.body.lastname, req.session.user], function (err) {
+            if (err) throw err;
+        })
+        req.session.lastname = req.body.lastname;
+        lname = 'Last Name Updated';
+    }
     if (req.body.orientation) {
         connection.query("UPDATE users SET sexual_or = ? WHERE username = ?", [req.body.orientation, req.session.user], function (err) {
             if (err) throw err;
@@ -538,6 +680,8 @@ app.post('/updates', function (req, res) {
         'orientation': orientation,
         'location': location,
         'bio': bio,
+        'firstname': fname,
+        'lastname': lname
     })
 })
 
@@ -591,7 +735,22 @@ app.post('/delete_account.html', function (req, res) {
                 connection.query("DELETE FROM pictures WHERE username = ?", [req.session.user], function (err) {
                     if (err) throw err;
                     else {
-                        res.redirect('/logout.html')
+                        connection.query("DELETE FROM liking WHERE liker = ? OR liked = ?", [req.session.user, req.session.user], function (err) {
+                            if (err) throw err;
+                            else {
+                                connection.query("DELETE FROM matchs WHERE matcher = ? OR matched = ?", [req.session.user, req.session.user], function (err) {
+                                    if (err) throw err;
+                                    else {
+                                        connection.query("DELETE FROM history WHERE visitor  = ? OR visited = ?", [req.session.user, req.session.user], function (err) {
+                                            if (err) throw err;
+                                            else {
+                                                res.redirect('/logout.html')
+                                            }
+                                        })
+                                    }
+                                })
+                            }
+                        })
                     }
                 })
             }
@@ -701,8 +860,16 @@ app.post('/liker/:user', function (req, res) {
                             connection.query("INSERT INTO liking(liker, liked) VALUES(?, ?)", [req.session.user, req.params.user], function (err) {
                                 if (err) throw err;
                                 else {
-                                    res.redirect('/user.html/' + req.params.user)
+                                    connection.query("SELECT * from liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
+                                        if (rows.length) {
+                                            console.log('Param : ' + req.params.user + '    SESSIO? :    ' + req.session.user);
+                                            connection.query("INSERT INTO matchs(matcher, matched) VALUES(?,?)", [req.session.user, req.params.user], function (err) {
+                                                if (err) throw err;
+                                            })
+                                        }
+                                    })
                                 }
+                                res.redirect('/user.html/' + req.params.user)
                             })
                         } else {
                             console.log('already liked this fdp');
@@ -716,6 +883,12 @@ app.post('/liker/:user', function (req, res) {
             connection.query("DELETE FROM liking WHERE liker = ? AND liked = ?", [req.session.user, req.params.user], function (err, rows) {
                 if (err) throw err;
                 else {
+                    connection.query("DELETE FROM matchs WHERE matcher = ? AND matched = ?", [req.session.user, req.params.user], function (err) {
+                        if (err) throw err;
+                    })
+                    connection.query("DELETE FROM matchs WHERE matcher = ? AND matched = ?", [req.params.user, req.session.user], function (err) {
+                        if (err) throw err;
+                    })
                     res.redirect('/user.html/' + req.params.user)
                 }
             })

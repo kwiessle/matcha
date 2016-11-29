@@ -56,6 +56,11 @@
     vertical-align: top;
 }
 
+.f1:hover,
+.f2:hover {
+    width: 29px;
+}
+
 .bio {
     font-size: 15px;
     background: #727272;
@@ -182,7 +187,11 @@
 }
 
 .signaler a {
-    color: indianred;
+    color: #9a9a9a;
+}
+
+.signaler a:hover {
+    color: #80be87;
 }
 
 .usr-set {
@@ -192,6 +201,8 @@
 }
 
 .usr-set-img-bar {
+    border-top: 2.5px solid #DEDEDE;
+    border-bottom: 2.5px solid #DEDEDE;
     background: white;
     max-width: 490px;
     display: inline-block;
@@ -207,11 +218,20 @@
 .img-options {
     width: 50%;
     display: inline-block;
+    font-size: 10px;
+    color: #6f6f6f;
+    vertical-align: middle;
 }
 
 .usr-set-img {
     width: 100%;
     display: inline-block;
+    vertical-align: bottom;
+}
+
+.options-bar {
+    background: white;
+    border-top: 10px solid #dedede;
 }
 
 .input {
@@ -224,7 +244,8 @@
     color: white;
     font-size: 15px;
     margin-left: 12.5px;
-    background-image: linear-gradient(#fff, #fff);
+    background-image: linear-gradient(#fff, #eee);
+    border: 1px solid #eee;
     color: #9f9f9F;
 }
 
@@ -251,14 +272,39 @@
 
 .relation {
     font-size: 15px;
-    float: right;
     color: #9f9f9f;
+    width: 40%;
     display: inline-block;
-    margin-right: 40px;
 }
 
 .dontShow {
     display: none;
+}
+
+.box-message {
+    background: white;
+    width: 90%;
+    max-width: 400px;
+    padding: 20px;
+    border-radius: 10px;
+    color: #888888;
+}
+
+.message-container {
+    padding: 30px;
+}
+
+.redirect {
+    color: #7fc4ff;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+#err-img {
+    margin-bottom: 40px;
+    width: 200px;
+    border: 6px solid white;
+    border-radius: 50%;
 }
 
 @media only screen and (max-width: 1000px) {

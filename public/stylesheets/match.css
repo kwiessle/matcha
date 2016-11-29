@@ -94,6 +94,17 @@
     background: 0;
 }
 
+.match-btns {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.match-btns input {
+    margin-left: 20px;
+}
+
+
+
 @media only screen and (max-width: 835px) {
     #like,
     #berk,

@@ -1,0 +1,33 @@
+<html>
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Matcha | Match</title>
+    <link href="stylesheets/main.css" rel="stylesheet">
+    <link href="stylesheets/match.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="menu">
+        <input id="search-bar" type="text" name="search" placeholder="Search ...">
+        <a href="match.html"> <img id="menu-logo" src="img/mini-logo.png" alt="mini-logo"></a>
+        <a href="#"><img class="menu-img" src="/img/feed.png"></a>
+        <a href="profile.html"><img class="menu-img" src="/img/account.png"></a>
+        <a href="message.html"><img class="menu-img" src="/img/envelope.png"></a>
+        <a href="logout.html"><img class="menu-img" src="/img/logout.png"></a>
+    </div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="site-content" align="center">
+        <div id="match" class="hud" align="left">
+            {{>homepage}} {{message}}
+        </div>
+    </div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+</body>

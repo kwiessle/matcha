@@ -37,12 +37,15 @@
             <form class="form-bar" method="post" action="/liker/{{liker}}">
                 <input id="like" class="input d1 {{liker_class1}}" type="submit" name="pov" value="follow">
                 <input class="input d2 {{liker_class2}}" type="submit" name="pov" value="unfollow">
-                <div class="relation">{{follow}} </div>
+            </form>
+            <div class="relation">{{relation}} </div>
         </div>
         <div id="my_pictures" class="usr-set"> {{>display_pictures_users}} </div>
         <div class="bottom-bar" align="left">
-            <input class="input d2" type="submit" name="pov" value="block">
-            <input class="input d2" type="submit" name="pov" value="reported"> </form>
+            <form class="form-bar" method="post" action="/liker/{{liker}}">
+                <input class="input d2 input-fix" type="submit" name="pov" value="Block">
+                <input class="input d2 input-fix" type="submit" name="pov" value="Report">
+            </form>
         </div>
         <div class="separator"></div>
         <div class="separator"></div>
