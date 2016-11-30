@@ -1,6 +1,6 @@
 /*     D  E  C  L  A  R  A  T  I  O  N  S    */
 
-
+//ALTER TABLE `block` DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin ROW_FORMAT = COMPACT;
 
 
 
@@ -120,6 +120,9 @@ app.get('/', function (req, res) {
     })
 });
 
+
+
+
 app.get('/profile.html', function (req, res) {
     if (!req.session.user) {
         res.redirect('/');
@@ -160,6 +163,9 @@ app.get('/profile.html', function (req, res) {
         })
     }
 });
+
+
+
 
 app.get('/reset_password.html', function (req, res) {
     res.render('reset_password.html')
@@ -494,7 +500,35 @@ app.get("/history.html", function (req, res) {
             }
         })
     }
-});
+})
+
+app.get('/feed.html', function (req, res) {
+    if (!req.session.user) {
+        res.redirect("/");
+    } else {
+        connection.query("SELECT * FROM users WHERE username = ?", [req.session.user], function (err, rows) {
+            if (err) throw err;
+            if (!rows[0].profil_pic) {
+                res.redirect("/error.html");
+            } else {
+                connection.query("SELECT * FROM users", function (err, rows) {
+                    if (err) throw err;
+                    else {
+                        for (var k in rows) {
+                            rows[k].class = (Number(k) % 2) + 1;
+                            rows[k].birth = profile.age(rows[k].birthday);
+                        }
+                        res.render("feed.html", {
+                            table: {
+                                infos: rows
+                            }
+                        })
+                    }
+                })
+            }
+        })
+    }
+})
 
 app.get("/blocked.html", function (req, res) {
     var infos = [];

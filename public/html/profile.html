@@ -7,13 +7,15 @@
     <link href="stylesheets/main.css" rel="stylesheet">
     <link href="stylesheets/profile.css" rel="stylesheet">
     <link href="stylesheets/match.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="https://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js"></script>
 </head>
 
 <body>
     <div class="menu">
-        <input id="search-bar" type="text" name="search" placeholder="Search ...">
+        <input class="typeahead tt-query" spellcheck="false" autocomplete="off" name="typeahead" type="text" />
         <a href="match.html"> <img id="menu-logo" src="img/mini-logo.png" alt="mini-logo"></a>
-        <a href="/feed.html"><img class="menu-img" src="/img/feed.png"></a>
+        <a href="feed.html"><img class="menu-img" src="/img/feed.png"></a>
         <a href="profile.html"><img class="menu-img" src="/img/account.png"></a>
         <a href="message.html"><img class="menu-img" src="/img/envelope.png"></a>
         <a href="logout.html"><img class="menu-img" src="/img/logout.png"></a>
@@ -70,6 +72,7 @@
         <div class="separator"></div>
         <div class="separator"></div>
     </div>
+    <script src="/js/search.js"></script>
 </body>
 
 </html>

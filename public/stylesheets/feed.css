@@ -19,45 +19,46 @@
 .match {
     width: 100%;
     max-width: 1000px;
-    height: 60px;
+    height: 80px;
     vertical-align: middle;
+    background: white;
 }
 
 .match img {
     width: 50px;
     border-radius: 50%;
-    margin-top: 5px;
-    margin-left: 40px;
     display: inline-block;
     vertical-align: middle;
+    border: 2px solid #c3d1dd;
 }
 
 .match-name,
 .match-age,
-.match-location {
-    height: 20px;
+.match-location,
+.match-pop {
     width: 100px;
     display: inline-block;
     color: #808080;
     font-size: 15px;
     vertical-align: middle;
-    margin-left: 40px;
 }
 
-.e1 {
-    background: rgb(209, 227, 255);
+td {
+    text-align: center;
 }
 
-.e1 img {
-    border: 2px solid white;
+table {
+    border-spacing: 0;
+    border-collapse: collapse;
 }
 
-.e2 {
-    background: #fff;
-}
-
-.e2 img {
-    border: 2px solid rgb(209, 227, 255);
+.table-title th {
+    color: #fff;
+    font-weight: 100;
+    font-family: 'Open Sans', sans-serif;
+    padding-bottom: 20px;
+    padding-top: 20px;
+    background: #7fc4ff;
 }
 
 #like {
@@ -75,22 +76,19 @@
 }
 
 .show-profil {
-    float: right;
     font-size: 10px;
-    background: #76d0ff;
+    background: #ffb576;
     color: white;
     border-radius: 5px;
-    margin-top: 14px;
-    margin-right: 40px;
-    margin-left: 40px;
-    padding: 8px;
+    padding: 10px;
+    width: 100%;
 }
 
 .show-profil:hover {
     transition-duration: 0.9s;
     -moz-transition-duration: 0.9s;
     color: #808080;
-    background: 0;
+    background: #acf49b;
 }
 
 .match-btns {
@@ -98,15 +96,17 @@
     vertical-align: middle;
 }
 
-.match-btns input {
-    margin-left: 20px;
+tr {
+    line-height: 40px;
+    border-bottom: 5px solid #c3d1dd;
 }
 
 @media only screen and (max-width: 835px) {
     #like,
     #berk,
     .match-location,
-    .match-age {
+    .match-age,
+    {
         display: none;
     }
     .show-profil {
