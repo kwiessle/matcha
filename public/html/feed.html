@@ -13,11 +13,16 @@
     <script src="https://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js"></script>
     <script src="/js/front.js"></script>
     <script src="/js/sortElements.js"></script>
+    <script src="/js/typeahead.min.js"></script>
+    <script src="/js/search.js"></script>
 </head>
 
 <body>
     <div class="menu">
-        <input id="search-bar" type="text" name="search" placeholder="Search ...">
+        <form method="post" action="/search" class="search-form">
+            <input id="search-bar" type="text" name="search" placeholder="Search ..." class="typeahead tt-query" spellcheck="false" autocomplete="on" name="typeahead">
+            <input id="go" type="submit" name="search" value="Go!">
+        </form>
         <a href="match.html"> <img id="menu-logo" src="img/mini-logo.png" alt="mini-logo"></a>
         <a href="feed.html"><img class="menu-img" src="/img/feed.png"></a>
         <a href="profile.html"><img class="menu-img" src="/img/account.png"></a>

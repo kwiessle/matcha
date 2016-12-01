@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    //port: 8889,
-    port: 3307,
+    port: 8889,
+    //port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -121,7 +121,16 @@ app.get('/', function (req, res) {
 });
 
 
-
+app.get('/search', function (req, res) {
+    connection.query('SELECT firstname from users where firstname like "%' + req.query.key + '%"', function (err, rows, fields) {
+        if (err) throw err;
+        var data = [];
+        for (i = 0; i < rows.length; i++) {
+            data.push(rows[i].firstname);
+        }
+        res.end(JSON.stringify(data));
+    });
+});
 
 app.get('/profile.html', function (req, res) {
     if (!req.session.user) {
@@ -265,7 +274,7 @@ app.get('/user.html/:user', function (req, res) {
             connection.query("SELECT * FROM users WHERE username = ?", [req.params.user], function (err, rows) {
                 if (err) throw err;
                 if (!rows.length) {
-                    res.redirect('/match.html');
+                    res.redirect('/feed.html');
                 } else {
                     var infos = rows[0];
                     infos.birth = profile.age(rows[0].birthday);
@@ -821,7 +830,6 @@ app.post('/updates', function (req, res) {
     var fname;
     var lname;
     if (req.body.firstname) {
-        node
         connection.query("UPDATE users SET firstname = ? WHERE username = ?", [req.body.firstname, req.session.user], function (err) {
             if (err) throw err;
         })
@@ -1128,6 +1136,13 @@ app.post('/blocker/:user', function (req, res) {
     }
 })
 
+app.post('/search', function (req, res) {
+    if (req.body.search[0]) {
+        res.redirect('/user.html/' + req.body.search[0])
+    } else {
+        res.redirect(req.get('referer'));
+    }
+})
 
 
 
