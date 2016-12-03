@@ -1138,7 +1138,27 @@ app.post('/blocker/:user', function (req, res) {
 
 app.post('/search', function (req, res) {
     if (req.body.search[0]) {
-        res.redirect('/user.html/' + req.body.search[0])
+        connection.query("SELECT username FROM users WHERE firstname = ?", [req.body.search[0]], function (err, rows) {
+            if (err) throw err;
+            if (rows[0]) {
+                console.log(rows[0].username);
+                res.redirect('/user.html/' + rows[0].username)
+            } else {
+                connection.query('SELECT * from users where firstname like "%' + req.body.search[0] + '%"', function (err, rows) {
+                    if (err) throw err;
+                    for (var k in rows) {
+                        rows[k].class = (Number(k) % 2) + 1;
+                        rows[k].birth = profile.age(rows[k].birthday);
+                    }
+                    res.render("feed.html", {
+                        table: {
+                            infos: rows
+                        }
+                    })
+                })
+            }
+        })
+
     } else {
         res.redirect(req.get('referer'));
     }
