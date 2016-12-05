@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    port: 8889,
-    //port: 3307,
+    //port: 8889,
+    port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -139,35 +139,40 @@ app.get('/profile.html', function (req, res) {
         connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.session.user, req.session.profil_pic], function (err, rows) {
             if (err) throw err;
             else {
-                for (var k in rows) {
-                    rows[k].pic = rows[k].pic.replace("uploads/", "");
-                }
-                if (req.session.profil_pic) {
-                    res.render('profile.html', {
-                        firstname: req.session.firstname,
-                        lastname: req.session.lastname,
-                        location: req.session.location,
-                        bio: req.session.bio,
-                        pop: req.session.pop,
-                        profil_pic: req.session.profil_pic,
-                        birthday: profile.age(req.session.birthday) + ' ans ',
-                        display_pictures: {
-                            infos: rows
-                        }
-                    })
-                } else {
-                    res.render('profile.html', {
-                        firstname: req.session.firstname,
-                        lastname: req.session.lastname,
-                        location: req.session.location,
-                        bio: req.session.bio,
-                        pop: req.session.pop,
-                        profil_pic: 'img/no-pictures.png',
-                        display_pictures: {
-                            infos: rows
-                        }
-                    })
-                }
+                connection.query("SELECT * from tags WHERE username = ?", [req.session.user], function (err, tags) {
+                    for (var k in rows) {
+                        rows[k].pic = rows[k].pic.replace("uploads/", "");
+                    }
+                    if (req.session.profil_pic) {
+                        res.render('profile.html', {
+                            firstname: req.session.firstname,
+                            lastname: req.session.lastname,
+                            location: req.session.location,
+                            bio: req.session.bio,
+                            pop: req.session.pop,
+                            profil_pic: req.session.profil_pic,
+                            birthday: profile.age(req.session.birthday) + ' ans ',
+                            display_pictures: {
+                                infos: rows
+                            },
+                            display_tags: {
+                                value: tags
+                            }
+                        })
+                    } else {
+                        res.render('profile.html', {
+                            firstname: req.session.firstname,
+                            lastname: req.session.lastname,
+                            location: req.session.location,
+                            bio: req.session.bio,
+                            pop: req.session.pop,
+                            profil_pic: 'img/no-pictures.png',
+                            display_pictures: {
+                                infos: rows
+                            }
+                        })
+                    }
+                })
             }
         })
     }
@@ -829,6 +834,7 @@ app.post('/updates', function (req, res) {
     var bio;
     var fname;
     var lname;
+    var tag;
     if (req.body.firstname) {
         connection.query("UPDATE users SET firstname = ? WHERE username = ?", [req.body.firstname, req.session.user], function (err) {
             if (err) throw err;
@@ -865,12 +871,32 @@ app.post('/updates', function (req, res) {
 
         bio = 'Bio updated';
     }
+    if (req.body.preferences) {
+        var res = req.body.preferences.split(" ");
+        var results = create_account.find_duplicates(res);
+        for (var k in results) {
+            (function (k) {
+                connection.query("SELECT * FROM tags WHERE tag = ? AND username = ?", [results[k], req.session.user], function (err, rows) {
+                    if (err) throw err;
+                    if (results[k]) {
+                        if (!rows[0]) {
+                            connection.query("INSERT INTO tags(tag, username) VALUES(?,?)", [results[k], req.session.user], function (err) {
+                                if (err) throw err;
+                            })
+                        }
+                    }
+                })
+            })(k);
+        }
+        tag = "Tag updated";
+    }
     res.render('edit_profil.html', {
         'orientation': orientation,
         'location': location,
         'bio': bio,
         'firstname': fname,
-        'lastname': lname
+        'lastname': lname,
+        'tag': tag
     })
 })
 

@@ -1,5 +1,3 @@
-
-
 exports.form_checker = function (firstname, lastname, birthday, username, email, conf_email, password, conf_password, sexe) {
     var ret = '';
     var regEmail = new RegExp('^[0-9a-z._-]+@{1}[0-9a-z.-]{2,}[.]{1}[a-z]{2,5}$', 'i');
@@ -25,3 +23,17 @@ exports.form_checker = function (firstname, lastname, birthday, username, email,
         return ('SQL');
     }
 };
+
+exports.find_duplicates = function (arr) {
+    var len = arr.length,
+        out = [],
+        counts = {};
+    for (var i = 0; i < len; i++) {
+        var item = arr[i];
+        counts[item] = counts[item] >= 1 ? counts[item] + 1 : 1;
+        if (counts[item] === 1) {
+            out.push(item);
+        }
+    }
+    return out;
+}
