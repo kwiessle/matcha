@@ -121,6 +121,13 @@ app.get('/', function (req, res) {
 });
 
 
+app.get('/hashtags.html', function (req, res) {
+    connection.query("SELECT DISTINCT tag FROM tags", function (err, rows) {
+        if (err) throw err;
+        console.log(rows);
+    })
+})
+
 app.get('/search', function (req, res) {
     connection.query('SELECT firstname from users where firstname like "%' + req.query.key + '%"', function (err, rows, fields) {
         if (err) throw err;
@@ -241,6 +248,52 @@ app.get('/change_password.html/:token/:username', function (req, res) {
     }
 });
 
+app.get('/deletetag/:data', function (req, res) {
+    if (req.params.data) {
+        connection.query("DELETE FROM tags WHERE tag = ? AND username = ?", [req.params.data, req.session.user], function (err) {
+            if (err) throw err;
+            else {
+                res.redirect('/profile.html')
+            }
+        })
+    } else {
+        res.redirect('/profile.html')
+    }
+})
+
+app.get('/tag/:data', function (req, res) {
+    var infos = [];  
+    if (req.params.data) {
+        connection.query("SELECT username FROM tags WHERE tag =? ", [req.params.data], function (err, rows) {
+            if (err) throw err;
+            if (rows[0]) {
+                for (var k in rows) {
+                    (function (k, callback) {
+                        connection.query("SELECT * FROM users WHERE username = ?", [rows[k].username], function (err, row) {
+                            if (err) throw err;
+                            else {
+                                infos[k] = row[0];
+                                infos[k].birth = profile.age(row[0].birthday);
+                                // infos[k].profil_pic = '/' + infos[k].profil_pic;
+                                if (!rows[Number(k) + 1]) {
+                                    callback();
+                                }
+                            }
+                        });
+                    })(k, function () {
+                        console.log(infos);
+                        res.render("feed.html", {
+                            table: {
+                                infos: infos
+                            }
+                        })
+                    });
+                }
+            }
+        })
+    }
+})
+
 app.get('/change_password.html', function (req, res) {
     if (req.session.guest) {
         res.render('change_password.html')
@@ -290,6 +343,45 @@ app.get('/user.html/:user', function (req, res) {
                             if (match.length) {
                                 connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.params.user, rows[0].profil_pic], function (err, row) {
                                     if (err) throw err;
+                                    for (var k in row) {
+                                        row[k].pic = row[k].pic.replace("uploads/", "");
+                                    }
+                                    if (!infos.profil_pic) {
+                                        infos.profil_pic = 'img/no-pictures.png';
+                                    }
+                                    connection.query("SELECT * FROM tags WHERE username = ?", [req.params.user], function (err, tags) {
+                                        if (err) throw err;
+                                        connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
+                                            if (err) throw err;
+                                            var relation = '';
+                                            if (rows.length) {
+                                                relation = req.params.user + ' you follow';
+                                            }
+                                            res.render('user.html', {
+                                                firstname: infos.firstname,
+                                                lastname: infos.lastname,
+                                                location: infos.location,
+                                                profil_pic: infos.profil_pic,
+                                                birthday: infos.birth + ' ans ',
+                                                liker: infos.username,
+                                                liker_class1: 'dontShow',
+                                                relation: relation,
+                                                status: infos.login,
+                                                pop: infos.pop,
+                                                bio: infos.bio,
+                                                display_pictures_users: {
+                                                    infos: row
+                                                },
+                                                display_public_tags: {
+                                                    value: tags
+                                                }
+                                            });
+                                        })
+                                    })
+                                });
+                            } else {
+                                connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.params.user, rows[0].profil_pic], function (err, row) {
+                                    if (err) throw err;
                                     if (data[0]) {
                                         infos.follow = "you like " + rows[0].firstname;
                                     }
@@ -302,46 +394,8 @@ app.get('/user.html/:user', function (req, res) {
                                     if (!infos.profil_pic) {
                                         infos.profil_pic = 'img/no-pictures.png';
                                     }
-                                    connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
+                                    connection.query("SELECT * FROM tags WHERE username = ?", [req.params.user], function (err, tags) {
                                         if (err) throw err;
-                                        var relation = '';
-                                        if (rows.length) {
-                                            relation = req.params.user + ' you follow';
-                                        }
-                                        res.render('user.html', {
-                                            firstname: infos.firstname,
-                                            lastname: infos.lastname,
-                                            location: infos.location,
-                                            profil_pic: infos.profil_pic,
-                                            birthday: infos.birth + ' ans ',
-                                            liker: infos.username,
-                                            liker_class1: 'dontShow',
-                                            relation: relation,
-                                            status: infos.login,
-                                            pop: infos.pop,
-                                            bio: infos.bio,
-                                            display_pictures_users: {
-                                                infos: row
-                                            }
-                                        });
-                                    })
-                                });
-                            } else {
-                                {
-                                    connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.params.user, rows[0].profil_pic], function (err, row) {
-                                        if (err) throw err;
-                                        if (data[0]) {
-                                            infos.follow = "you like " + rows[0].firstname;
-                                        }
-                                        if (match[0]) {
-                                            infos.follow = "you match with " + rows[0].firstname;
-                                        }
-                                        for (var k in row) {
-                                            row[k].pic = row[k].pic.replace("uploads/", "");
-                                        }
-                                        if (!infos.profil_pic) {
-                                            infos.profil_pic = 'img/no-pictures.png';
-                                        }
                                         connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
                                             if (err) throw err;
                                             var relation = '';
@@ -362,11 +416,14 @@ app.get('/user.html/:user', function (req, res) {
                                                 bio: infos.bio,
                                                 display_pictures_users: {
                                                     infos: row
+                                                },
+                                                display_public_tags: {
+                                                    value: tags
                                                 }
                                             });
                                         })
-                                    });
-                                }
+                                    })
+                                });
                             }
                         });
                     });
@@ -392,9 +449,6 @@ app.get("/matchs.html", function (req, res) {
                 } else {
                     matchs[k] = rows[k].matcher;
                 }
-                /*console.log('matcher :    ' + rows[k].matcher);
-                console.log('matched :    ' + rows[k].matched);*/
-                console.log(matchs[k]);
             }
             if (matchs[0]) {
                 for (var k in matchs) {
@@ -829,75 +883,92 @@ app.post('/file', function (req, res) {
 })
 
 app.post('/updates', function (req, res) {
-    var orientation;
-    var location;
-    var bio;
-    var fname;
-    var lname;
-    var tag;
-    if (req.body.firstname) {
-        connection.query("UPDATE users SET firstname = ? WHERE username = ?", [req.body.firstname, req.session.user], function (err) {
-            if (err) throw err;
-        })
-        req.session.firstname = req.body.firstname;
-        fname = 'First Name Updated';
-    }
-    if (req.body.lastname) {
-        connection.query("UPDATE users SET lastname = ? WHERE username = ?", [req.body.lastname, req.session.user], function (err) {
-            if (err) throw err;
-        })
-        req.session.lastname = req.body.lastname;
-        lname = 'Last Name Updated';
-    }
-    if (req.body.orientation) {
-        connection.query("UPDATE users SET sexual_or = ? WHERE username = ?", [req.body.orientation, req.session.user], function (err) {
-            if (err) throw err;
-        })
-        orientation = 'Orientation updated';
-    }
-    if (req.body.location) {
-        connection.query("UPDATE users SET location = ? WHERE username = ?", [req.body.location, req.session.user], function (err) {
-            if (err) throw err;
-        })
-        req.session.location = req.body.location;
-
-        location = 'Location updated';
-    }
-    if (req.body.bio) {
-        connection.query("UPDATE users SET bio = ? WHERE username = ?", [req.body.bio, req.session.user], function (err) {
-            if (err) throw err;
-        })
-        req.session.bio = req.body.bio;
-
-        bio = 'Bio updated';
-    }
-    if (req.body.preferences) {
-        var res = req.body.preferences.split(" ");
-        var results = create_account.find_duplicates(res);
-        for (var k in results) {
-            (function (k) {
-                connection.query("SELECT * FROM tags WHERE tag = ? AND username = ?", [results[k], req.session.user], function (err, rows) {
-                    if (err) throw err;
-                    if (results[k]) {
-                        if (!rows[0]) {
-                            connection.query("INSERT INTO tags(tag, username) VALUES(?,?)", [results[k], req.session.user], function (err) {
-                                if (err) throw err;
-                            })
-                        }
-                    }
-                })
-            })(k);
+    (function (callback) {
+        var orientation;
+        var location;
+        var bio;
+        var fname;
+        var lname;
+        var tag;
+        var hashtag = [];
+        var results = [];
+        if (req.body.firstname) {
+            connection.query("UPDATE users SET firstname = ? WHERE username = ?", [req.body.firstname, req.session.user], function (err) {
+                if (err) throw err;
+            })
+            req.session.firstname = req.body.firstname;
+            fname = 'First Name Updated';
         }
-        tag = "Tag updated";
-    }
-    res.render('edit_profil.html', {
-        'orientation': orientation,
-        'location': location,
-        'bio': bio,
-        'firstname': fname,
-        'lastname': lname,
-        'tag': tag
-    })
+        if (req.body.lastname) {
+            connection.query("UPDATE users SET lastname = ? WHERE username = ?", [req.body.lastname, req.session.user], function (err) {
+                if (err) throw err;
+            })
+            req.session.lastname = req.body.lastname;
+            lname = 'Last Name Updated';
+        }
+        if (req.body.orientation) {
+            connection.query("UPDATE users SET sexual_or = ? WHERE username = ?", [req.body.orientation, req.session.user], function (err) {
+                if (err) throw err;
+            })
+            orientation = 'Orientation updated';
+        }
+        if (req.body.location) {
+            connection.query("UPDATE users SET location = ? WHERE username = ?", [req.body.location, req.session.user], function (err) {
+                if (err) throw err;
+            })
+            req.session.location = req.body.location;
+
+            location = 'Location updated';
+        }
+        if (req.body.bio) {
+            connection.query("UPDATE users SET bio = ? WHERE username = ?", [req.body.bio, req.session.user], function (err) {
+                if (err) throw err;
+            })
+            req.session.bio = req.body.bio;
+
+            bio = 'Bio updated';
+        }
+        if (req.body.preferences) {
+            var res = req.body.preferences.trim().split(" ");
+            for (var k in res) {
+                hashtag[k] = res[k].split("#");
+                hashtag[k] = create_account.cleanArray(hashtag[k]);
+            }
+            var j = 0;
+            for (var k in hashtag) {
+                for (var i in hashtag[k]) {
+                    results[j] = hashtag[k][i];
+                    j++
+                }
+            }
+            results = create_account.find_duplicates(results);
+            for (var k in results) {
+                (function (k) {
+                    connection.query("SELECT * FROM tags WHERE tag = ? AND username = ?", [results[k], req.session.user], function (err, rows) {
+                        if (err) throw err;
+                        if (results[k]) {
+                            if (!rows[0]) {
+                                connection.query("INSERT INTO tags(tag, username) VALUES(?,?)", [results[k], req.session.user], function (err) {
+                                    if (err) throw err;
+                                })
+                            }
+                        }
+                    })
+                })(k);
+            }
+            tag = "Tag updated";
+        }
+        callback(orientation, location, bio, fname, lname, tag)
+    })(function (orientation, location, bio, fname, lname, tag) {
+        res.render('edit_profil.html', {
+            'orientation': orientation,
+            'location': location,
+            'bio': bio,
+            'firstname': fname,
+            'lastname': lname,
+            'tag': tag
+        })
+    });
 })
 
 app.post('/edit_account.html', function (req, res) {

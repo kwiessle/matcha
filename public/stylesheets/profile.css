@@ -316,6 +316,40 @@
     border-radius: 50%;
 }
 
+.hud-tags {
+    width: 100%;
+    margin-top: 20px;
+    max-width: 1000px;
+}
+
+.tag {
+    background: white;
+    display: inline-block;
+    height: 30px;
+    border-radius: 5px;
+    line-height: 30px;
+    padding: 10px;
+    vertical-align: middle;
+    
+}
+
+.tag:hover {
+    background: #7fc4ff;
+}
+
+.tag:hover a {
+    color: white;
+}
+
+.tag a {
+    color: #8e8e8e;
+} 
+
+.tag img {
+    width: 20px;
+    vertical-align: middle;
+}
+
 @media only screen and (max-width: 1000px) {
     .top-bar,
     .bottom-bar {
