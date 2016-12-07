@@ -90,6 +90,7 @@ connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`reports` ( `reporter` VAR
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`tags` ( `tag` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`matchs` ( `matcher` VARCHAR(255) NOT NULL , `matched` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`block` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `blocker` VARCHAR(255) NOT NULL , `blocked` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`dictionary` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `value` VARCHAR(255) NOT NULL , `score` INT(5) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;");
 connection.query("use matcha");
 
 
@@ -121,11 +122,37 @@ app.get('/', function (req, res) {
 });
 
 
+
+
 app.get('/hashtags.html', function (req, res) {
-    connection.query("SELECT DISTINCT tag FROM tags", function (err, rows) {
+    connection.query("SELECT DISTINCT * FROM dictionary", function (err, rows) {
         if (err) throw err;
-        console.log(rows);
+        else {
+            res.render('hashtags.html', {
+                dictionary: {
+                    value: rows
+                }
+            })
+        }
     })
+})
+
+
+app.get('/hashtags/:data', function (req, res) {
+    if (!req.params.data) {
+        res.redirect('/hashtags.html')
+    } else {
+        connection.query("SELECT DISTINCT * FROM dictionary WHERE substr(value, 1, 1) = ?", [req.params.data], function (err, rows) {
+            if (err) throw err;
+            else {
+                res.render('hashtags.html', {
+                    dictionary: {
+                        value: rows
+                    }
+                })
+            }
+        })
+    }
 })
 
 app.get('/search', function (req, res) {
@@ -952,6 +979,20 @@ app.post('/updates', function (req, res) {
                                     if (err) throw err;
                                 })
                             }
+                            connection.query('SELECT * FROM dictionary WHERE value = ?', [results[k]], function (err, row_dic) {
+                                if (err) throw err;
+                                if (!row_dic[0]) {
+                                    console.log(results[k]);
+                                    connection.query("INSERT INTO dictionary(value, score) VALUES(?,1)", [results[k]], function (err) {
+                                        if (err) throw err;
+                                    })
+                                }
+                                if (row_dic[0]) {
+                                    connection.query("UPDATE dictionary SET score = score + 1 WHERE value = ?", [row_dic[0].value], function (err) {
+                                        if (err) throw err;
+                                    })
+                                }
+                            })
                         }
                     })
                 })(k);

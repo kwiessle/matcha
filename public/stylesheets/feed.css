@@ -5,7 +5,6 @@
     overflow: scroll;
     border-radius: 20px;
 }
-
 .result {
     width: 100%;
     max-width: 1000px;
@@ -15,7 +14,6 @@
     border-top-right-radius: 20px;
     margin-bottom: 20px;
 }
-
 .match {
     width: 100%;
     max-width: 1000px;
@@ -23,7 +21,6 @@
     vertical-align: middle;
     background: white;
 }
-
 .match img {
     width: 50px;
     border-radius: 50%;
@@ -31,7 +28,6 @@
     vertical-align: middle;
     border: 2px solid #c3d1dd;
 }
-
 .match-name,
 .match-age,
 .match-location,
@@ -42,16 +38,13 @@
     font-size: 15px;
     vertical-align: middle;
 }
-
 td {
     text-align: center;
 }
-
 table {
     border-spacing: 0;
     border-collapse: collapse;
 }
-
 .table-title th {
     color: #fff;
     font-weight: 100;
@@ -60,21 +53,18 @@ table {
     padding-top: 20px;
     background: #7fc4ff;
 }
-
 #like {
     width: 30px;
     border: none;
     float: right;
     margin-top: 15px;
 }
-
 #berk {
     width: 30px;
     border: none;
     float: right;
     margin-top: 15px;
 }
-
 .show-profil {
     font-size: 10px;
     background: #ffb576;
@@ -83,24 +73,73 @@ table {
     padding: 10px;
     width: 100%;
 }
-
 .show-profil:hover {
     transition-duration: 0.9s;
     -moz-transition-duration: 0.9s;
     color: #808080;
     background: #acf49b;
 }
-
 .match-btns {
     display: inline-block;
     vertical-align: middle;
 }
-
 tr {
     line-height: 40px;
     border-bottom: 5px solid #c3d1dd;
 }
-
+.tag {
+    width: 300px;
+    height: 40px;
+    margin: 10px;
+    line-height: 40px;
+    font-size: 0;
+    -webkit-box-shadow: 0px 0px 100px 5px #bdbbff;
+    border-radius: 10px;
+}
+.tag a,
+.tag div {
+    display: inline-block;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 15px;
+    color: white;
+}
+#tag-item {
+    background: white;
+    width: 100px;
+    color: #9b9b9b;
+    border-bottom-left-radius: 5px;
+    border-top-left-radius: 5px;
+}
+.tag-subscribe {
+    width: 100px;
+    background: #7fc4ff;
+    box-shadow: inset 0px 0px 50px 5px #7d7ca8;
+    border-bottom-right-radius: 5px;
+    border-top-right-radius: 5px;
+}
+.tag-subscribe:hover {
+    background: indianred;
+    box-shadow: inset 0px 0px 50px 5px #ff9696;
+}
+.tag-score {
+    background: #dedada;
+    width: 40px;
+    box-shadow: inset 0px 0px 50px 5px #977ca8;
+}
+.hashtags-title {
+    width: 300px;
+    background: white;
+    font-size: 30px;
+    height: 40px;
+    line-height: 40px;
+    color: #b1b1b1;
+}
+.alphabet {
+    background: red;
+    height: 100px;
+    width: 200px;
+}
 @media only screen and (max-width: 835px) {
     #like,
     #berk,

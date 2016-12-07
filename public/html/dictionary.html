@@ -1,5 +1,7 @@
 {{#dictionary.value}}
 <div class="tag">
-    <a href="/tag/{{tags}}">#{{tags[a]}}</a>
+    <a id="tag-item" href="/tag/{{value}}">#{{value}}</a>
+    <div class="tag-score">{{score}}</div>
+    <div class="tag-subscribe"><a href="/addtag/{{value}}">Subscribe</a></div>
 </div>
 {{/dictionary.value}}
