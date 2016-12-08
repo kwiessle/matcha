@@ -8,7 +8,6 @@
     <link href="/stylesheets/feed.css" rel="stylesheet">
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBylV2tWJmuiBNLN3XK2a-LBtkv3doz6H8"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-    <script src="/js/mustache.js"></script>
     <script src="https://localhost:4433/socket.io/socket.io.js"></script>
     <script src="https://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js"></script>
     <script src="/js/front.js"></script>
@@ -34,8 +33,9 @@
     <div class="separator"></div>
     <div class="separator"></div>
     <div class="site-content" align="center">
-        <div class="alpahbet">
+        <div class="alphabet">
             <a href="/hashtags.html">#</a>
+            <a href="/hashtags/number">123</a>
             <a href="/hashtags/a">a</a>
             <a href="/hashtags/b">b</a>
             <a href="/hashtags/c">c</a>
@@ -61,11 +61,13 @@
             <a href="/hashtags/w">w</a>
             <a href="/hashtags/x">x</a>
             <a href="/hashtags/y">y</a>
-            <a href="/hashtags/y">y</a>
+            <a href="/hashtags/z">z</a>
         </div>
         <div class="hashtags-title">#ash Tags</div>
-        {{>dictionary}}
+        <div class="dictionary" align="left">{{>dictionary}}</div>
+        {{{message}}}
     </div>
+
     <div class="separator"></div>
     <div class="separator"></div>
     <div class="separator"></div>

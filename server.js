@@ -65,6 +65,10 @@ var sharp = require('sharp');
 var moment = require('moment');
 var create_account = require('./server/create_Account');
 var profile = require('./server/age');
+var geoip = require('geoip-lite');
+var cookie = require('cookie')
+var cookieParser = require('cookie-parser');
+const publicIp = require('public-ip');
 
 
 
@@ -81,16 +85,18 @@ var profile = require('./server/age');
 connection.connect(function (err) {
     if (err) throw err;
 });
-connection.query("CREATE DATABASE IF NOT EXISTS matcha;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`users` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `firstname` VARCHAR(255) NOT NULL , `lastname` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `birthday` DATE NOT NULL , `email` VARCHAR(255) NOT NULL , `password` VARCHAR(255) NOT NULL , `sexe` VARCHAR(8) NOT NULL , `token` VARCHAR(255) NOT NULL , `validation` VARCHAR(1) NOT NULL DEFAULT '0' ,  `profil_pic` LONGTEXT DEFAULT NULL, `sexual_or` VARCHAR(10) NOT NULL DEFAULT 'bi' , `bio` VARCHAR(255) DEFAULT NULL , `location` VARCHAR(255) DEFAULT NULL ,  `pop` INT(5) DEFAULT '0', login VARCHAR(255), `sessionID` VARCHAR(255) DEFAULT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`pictures` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `pic` LONGTEXT NOT NULL , `username` VARCHAR(255) NOT NULL,  PRIMARY KEY (`id`)) ENGINE = InnoDB;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`history` ( `visitor` VARCHAR(255) NOT NULL , `visited` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`liking` ( `liker` VARCHAR(255) NOT NULL , `liked` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`reports` ( `reporter` VARCHAR(255) NOT NULL , `reported` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`tags` ( `tag` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`matchs` ( `matcher` VARCHAR(255) NOT NULL , `matched` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`block` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `blocker` VARCHAR(255) NOT NULL , `blocked` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`dictionary` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `value` VARCHAR(255) NOT NULL , `score` INT(5) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;");
+connection.query("CREATE DATABASE IF NOT EXISTS matcha CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`users` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `firstname` VARCHAR(255) NOT NULL , `lastname` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `birthday` DATE NOT NULL , `email` VARCHAR(255) NOT NULL , `password` VARCHAR(255) NOT NULL , `sexe` VARCHAR(8) NOT NULL , `token` VARCHAR(255) NOT NULL , `validation` VARCHAR(1) NOT NULL DEFAULT '0' ,  `profil_pic` LONGTEXT DEFAULT NULL, `sexual_or` VARCHAR(10) NOT NULL DEFAULT 'bi' , `bio` VARCHAR(255) DEFAULT NULL , `location` VARCHAR(255) DEFAULT NULL, `currlat` DECIMAL(11, 8) DEFAULT NULL, `currlong` DECIMAL( 11, 8 ) DEFAULT NULL, `pop` INT(5) DEFAULT '0', login VARCHAR(255), `sessionID` VARCHAR(255) DEFAULT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4  COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`pictures` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `pic` LONGTEXT NOT NULL , `username` VARCHAR(255) NOT NULL,  PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`history` ( `visitor` VARCHAR(255) NOT NULL , `visited` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`liking` ( `liker` VARCHAR(255) NOT NULL , `liked` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`reports` ( `reporter` VARCHAR(255) NOT NULL , `reported` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`tags` ( `tag` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`matchs` ( `matcher` VARCHAR(255) NOT NULL , `matched` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`block` ( `block_by` VARCHAR(255) NOT NULL , `blocked` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`UserComment` ( `UserId` INT(5) NOT NULL , UserName VARCHAR(255) NOT NULL , `Comment` VARCHAR(255) NOT NULL) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`notification` (`id` INT(5) NOT NULL AUTO_INCREMENT, `sender` VARCHAR(255) NOT NULL , `sended` VARCHAR(255) NOT NULL, `content` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`dictionary` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `value` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `score` INT(5) NOT NULL DEFAULT '0' , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("use matcha");
 
 
@@ -125,24 +131,8 @@ app.get('/', function (req, res) {
 
 
 app.get('/hashtags.html', function (req, res) {
-    connection.query("SELECT DISTINCT * FROM dictionary", function (err, rows) {
-        if (err) throw err;
-        else {
-            res.render('hashtags.html', {
-                dictionary: {
-                    value: rows
-                }
-            })
-        }
-    })
-})
-
-
-app.get('/hashtags/:data', function (req, res) {
-    if (!req.params.data) {
-        res.redirect('/hashtags.html')
-    } else {
-        connection.query("SELECT DISTINCT * FROM dictionary WHERE substr(value, 1, 1) = ?", [req.params.data], function (err, rows) {
+    if (req.session.user) {
+        connection.query("SELECT DISTINCT * FROM dictionary", function (err, rows) {
             if (err) throw err;
             else {
                 res.render('hashtags.html', {
@@ -152,6 +142,70 @@ app.get('/hashtags/:data', function (req, res) {
                 })
             }
         })
+    } else {
+        res.redirect('/');
+    }
+})
+
+
+app.get('/hashtags/:data', function (req, res) {
+    if (req.session.user) {
+        if (!req.params.data) {
+            res.redirect('/hashtags.html')
+        }
+        if (req.params.data === 'number') {
+            connection.query("SELECT DISTINCT * FROM dictionary WHERE value REGEXP  '[0-9]'", function (err, rows) {
+                if (err) throw err;
+                else {
+                    res.render('hashtags.html', {
+                        dictionary: {
+                            value: rows
+                        }
+                    })
+                }
+            })
+        } else {
+            connection.query("SELECT DISTINCT * FROM dictionary WHERE substr(value, 1, 1) = ?", [req.params.data], function (err, rows) {
+                if (err) throw err;
+                else {
+                    res.render('hashtags.html', {
+                        dictionary: {
+                            value: rows
+                        }
+                    })
+                }
+            })
+        }
+    } else {
+        res.redirect('/');
+    }
+})
+
+app.get('/addtag/:data', function (req, res) {
+    if (req.session.user) {
+        if (!req.params.data) {
+            res.redirect('/hashtags.html')
+        } else {
+            connection.query("SELECT * FROM tags WHERE tag = ? AND username = ?", [req.params.data, req.session.user], function (err, rows) {
+                if (err) throw err;
+                if (rows[0]) {
+                    res.render('hashtags.html', {
+                        message: '<div class="message-ret">Tag already used</div>'
+                    })
+                } else {
+                    connection.query("INSERT INTO tags(tag, username) VALUES(?,?)", [req.params.data, req.session.user], function (err) {
+                        if (err) throw err;
+                        else {
+                            res.render('hashtags.html', {
+                                message: '<div class="message-ret">Tag added</div>'
+                            })
+                        }
+                    })
+                }
+            })
+        }
+    } else {
+        res.redirect('/');
     }
 })
 
@@ -177,41 +231,44 @@ app.get('/profile.html', function (req, res) {
                     for (var k in rows) {
                         rows[k].pic = rows[k].pic.replace("uploads/", "");
                     }
-                    if (req.session.profil_pic) {
-                        res.render('profile.html', {
-                            firstname: req.session.firstname,
-                            lastname: req.session.lastname,
-                            location: req.session.location,
-                            bio: req.session.bio,
-                            pop: req.session.pop,
-                            profil_pic: req.session.profil_pic,
-                            birthday: profile.age(req.session.birthday) + ' ans ',
-                            display_pictures: {
-                                infos: rows
-                            },
-                            display_tags: {
-                                value: tags
-                            }
-                        })
-                    } else {
-                        res.render('profile.html', {
-                            firstname: req.session.firstname,
-                            lastname: req.session.lastname,
-                            location: req.session.location,
-                            bio: req.session.bio,
-                            pop: req.session.pop,
-                            profil_pic: 'img/no-pictures.png',
-                            display_pictures: {
-                                infos: rows
-                            }
-                        })
-                    }
+                    connection.query("SELECT location FROM users WHERE username = ?", [req.session.user], function (err, loc) {
+                        if (err) throw err;
+                        req.session.location = loc[0].location;
+                        if (req.session.profil_pic) {
+                            res.render('profile.html', {
+                                firstname: req.session.firstname,
+                                lastname: req.session.lastname,
+                                location: req.session.location,
+                                bio: req.session.bio,
+                                pop: req.session.pop,
+                                profil_pic: req.session.profil_pic,
+                                birthday: profile.age(req.session.birthday) + ' ans ',
+                                display_pictures: {
+                                    infos: rows
+                                },
+                                display_tags: {
+                                    value: tags
+                                }
+                            })
+                        } else {
+                            res.render('profile.html', {
+                                firstname: req.session.firstname,
+                                lastname: req.session.lastname,
+                                location: req.session.location,
+                                bio: req.session.bio,
+                                pop: req.session.pop,
+                                profil_pic: 'img/no-pictures.png',
+                                display_pictures: {
+                                    infos: rows
+                                }
+                            })
+                        }
+                    })
                 })
             }
         })
     }
 });
-
 
 
 
@@ -280,6 +337,9 @@ app.get('/deletetag/:data', function (req, res) {
         connection.query("DELETE FROM tags WHERE tag = ? AND username = ?", [req.params.data, req.session.user], function (err) {
             if (err) throw err;
             else {
+                connection.query("UPDATE dictionary SET score = score - 1 WHERE value = ?", [req.params.data], function (err) {
+                    if (err) throw err;
+                })
                 res.redirect('/profile.html')
             }
         })
@@ -805,7 +865,7 @@ app.post('/', function (req, res) {
             req.session.profil_pic = rows[0].profil_pic;
             req.session.pop = rows[0].pop;
             req.session.priority = 0;
-            connection.query("UPDATE users SET login = ? WHERE username = ?", ["online", req.session.user])
+            connection.query("UPDATE users SET login = ?, sessionID = ? WHERE username = ?", ["online", req.sessionID, req.session.user])
             res.redirect('profile.html');
         } else {
             res.render('index.html', {
@@ -1275,32 +1335,45 @@ app.post('/blocker/:user', function (req, res) {
 })
 
 app.post('/search', function (req, res) {
-    if (req.body.search[0]) {
-        connection.query("SELECT username FROM users WHERE firstname = ?", [req.body.search[0]], function (err, rows) {
-            if (err) throw err;
-            if (rows[0]) {
-                console.log(rows[0].username);
-                res.redirect('/user.html/' + rows[0].username)
-            } else {
-                connection.query('SELECT * from users where firstname like "%' + req.body.search[0] + '%"', function (err, rows) {
-                    if (err) throw err;
-                    for (var k in rows) {
-                        rows[k].class = (Number(k) % 2) + 1;
-                        rows[k].birth = profile.age(rows[k].birthday);
-                    }
-                    res.render("feed.html", {
-                        table: {
-                            infos: rows
+    if (req.session.profil_pic) {
+        if (req.body.search[0]) {
+            connection.query("SELECT username FROM users WHERE firstname = ?", [req.body.search[0]], function (err, rows) {
+                if (err) throw err;
+                if (rows[0]) {
+                    console.log(rows[0].username);
+                    res.redirect('/user.html/' + rows[0].username)
+                } else {
+                    connection.query('SELECT * from users where firstname like "%' + req.body.search[0] + '%"', function (err, rows) {
+                        if (err) throw err;
+                        for (var k in rows) {
+                            rows[k].class = (Number(k) % 2) + 1;
+                            rows[k].birth = profile.age(rows[k].birthday);
                         }
+                        res.render("feed.html", {
+                            table: {
+                                infos: rows
+                            }
+                        })
                     })
-                })
-            }
-        })
-
+                }
+            })
+        } else {
+            res.redirect(req.get('referer'));
+        }
     } else {
-        res.redirect(req.get('referer'));
+        res.redirect('/error.html')
     }
 })
+
+
+
+app.get('*', function (req, res) {
+    if (!req.session.user) {
+        res.redirect('/');
+    } else {
+        res.status(404).send('<h1>Sorry this page doesn\'t exists</h1>');
+    }
+});
 
 
 
@@ -1309,12 +1382,43 @@ app.post('/search', function (req, res) {
 
 
 
-https.createServer(options, app, function (req, res) {
+var httpsServer = https.createServer(options, app, function (req, res) {
     res.writeHead(200);
-}).listen(4433);
+})
 
+httpsServer.listen(4433);
 
 
 
 
 /*    S  O  C  K  E  T  S     */
+var io = require('socket.io').listen(httpsServer.listen(4433));
+io.on('connection', function (socket) {
+    var cookies = cookieParser.signedCookies(cookie.parse(socket.handshake.headers.cookie), sess.secret);
+    var sessionid = cookies['connect.sid'];
+    socket.on("location", function (data) {
+        console.log(data);
+        if (data) {
+            var location = data.location;
+            if (location[1]) {
+                var arrondissement = location[1].split(',');
+                connection.query("UPDATE users SET location = ? WHERE sessionID = ?", [arrondissement[1], sessionid], function (err) {
+                    if (err) throw err;
+                });
+            } else {
+                var arrondissement = location[0].split(',');
+                connection.query("UPDATE users SET location = ? WHERE sessionID = ?", [arrondissement[1], sessionid], function (err) {
+                    if (err) throw err;
+                });
+            }
+        }
+    })
+    publicIp.v4().then(function (ip) {
+        var location = geoip.lookup(ip).ll
+        socket.emit("iplocation", {
+            location: location
+        })
+    }).catch(function (err) {
+        console.log(err);
+    })
+});

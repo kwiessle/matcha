@@ -1,12 +1,9 @@
-document.getElementById('change-email').setAttribute('style', 'display: none');
-document.getElementById('change-password').setAttribute('style', 'display: none');
-
 function showEmailChanger() {
     var checker = document.getElementById('change-email').getAttribute("style");
     var checker2 = document.getElementById('change-password').getAttribute("style");
 
     if (checker2 === 'display: block') {
-        showPasswordChanger();
+        document.getElementById('change-password').setAttribute('style', 'display: none');
     }
     if (checker === 'display: none') {
         document.getElementById('change-email').setAttribute('style', 'display: block');
@@ -20,7 +17,7 @@ function showPasswordChanger() {
     var checker2 = document.getElementById('change-email').getAttribute("style");
 
     if (checker2 === 'display: block') {
-        showEmailChanger();
+        document.getElementById('change-email').setAttribute('style', 'display: none');
     }
     if (checker === 'display: none') {
         document.getElementById('change-password').setAttribute('style', 'display: block');

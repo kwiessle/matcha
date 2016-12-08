@@ -1,10 +1,8 @@
 .inscription-form {
-    width: ;
     padding-bottom: 60px;
     padding-top: 30px;
     background: #fafafa;
 }
-
 .inscription-form input {
     width: 200px;
     height: 40px;
@@ -12,7 +10,6 @@
     padding: 5px;
     font-size: 15px;
 }
-
 .header {
     width: 100%;
     height: 120px;
@@ -22,17 +19,14 @@
     background: -moz-linear-gradient(bottom right, #7fc4ff, #569ef2);
     background: linear-gradient(to bottom right, #7fc4ff, #569ef2);
 }
-
 #logo {
     width: 70%;
     max-width: 300px;
 }
-
 .link {
     font-size: 10px;
     color: #4ea5c1;
 }
-
 .button-submit {
     border: none;
     background: #7fc4ff;
@@ -42,38 +36,31 @@
     background: linear-gradient(to bottom right, #7fc4ff, #569ef2);
     border-radius: 5px;
 }
-
 .button-submit:hover {
     background: linear-gradient(#ff897f, #ff897f);
 }
-
 #form-logo {
     width: 200px;
     padding: 30px;
 }
-
 #input-fix {
     width: inherit;
     margin-left: 10px;
     margin-right: 10px;
     vertical-align: middle;
 }
-
 #send {
     margin-top: 30px;
     width: 205px;
 }
-
 .main-title {
     font-size: 28px;
 }
-
 .subtitle {
     font-size: 10px;
     width: 200px;
     padding: 20px;
 }
-
 .sexe {
     display: inline-block;
 }

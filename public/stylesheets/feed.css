@@ -88,13 +88,17 @@ tr {
     border-bottom: 5px solid #c3d1dd;
 }
 .tag {
-    width: 300px;
+    min-width: 300px;
+    max-width: 1000px;
     height: 40px;
     margin: 10px;
+    margin-right: 350px;
+    margin-left: 100px;
     line-height: 40px;
     font-size: 0;
-    -webkit-box-shadow: 0px 0px 100px 5px #bdbbff;
+    -webkit-box-shadow: 0px 0px 400px 5px #a2a2a2;
     border-radius: 10px;
+    text-align: right;
 }
 .tag a,
 .tag div {
@@ -106,7 +110,7 @@ tr {
 }
 #tag-item {
     background: white;
-    width: 100px;
+    min-width: 100px;
     color: #9b9b9b;
     border-bottom-left-radius: 5px;
     border-top-left-radius: 5px;
@@ -114,31 +118,58 @@ tr {
 .tag-subscribe {
     width: 100px;
     background: #7fc4ff;
-    box-shadow: inset 0px 0px 50px 5px #7d7ca8;
     border-bottom-right-radius: 5px;
     border-top-right-radius: 5px;
 }
 .tag-subscribe:hover {
-    background: indianred;
-    box-shadow: inset 0px 0px 50px 5px #ff9696;
+    background: #ff6464;
 }
 .tag-score {
-    background: #dedada;
+    background: #c7dfff;
     width: 40px;
-    box-shadow: inset 0px 0px 50px 5px #977ca8;
 }
 .hashtags-title {
     width: 300px;
     background: white;
-    font-size: 30px;
+    font-size: 25px;
+    line-height: 40px;
     height: 40px;
     line-height: 40px;
     color: #b1b1b1;
 }
 .alphabet {
-    background: red;
-    height: 100px;
-    width: 200px;
+    background: white;
+    min-height: 60px;
+    margin-bottom: 40px;
+    max-width: 1000px;
+    border-radius: 10px;
+}
+.alphabet a {
+    color: #b9b9b9;
+    font-size: 30px;
+    line-height: 60px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 12px;
+    padding-bottom: 13px;
+}
+.alphabet a:hover {
+    background: #7fc4ff;
+    color: white;
+}
+.message-ret {
+    width: 300px;
+    background: white;
+    height: 80px;
+    font-size: 20px;
+    line-height: 80px;
+    border-radius: 10px;
+    margin-top: 100px;
+    color: #a5a5a5;
+}
+.dictionary {
+    max-width: 1000px;
+    min-width: 700px;
 }
 @media only screen and (max-width: 835px) {
     #like,

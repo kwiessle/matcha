@@ -7,13 +7,14 @@
     <link href="stylesheets/main.css" rel="stylesheet">
     <link href="stylesheets/edit_account.css" rel="stylesheet">
     <script src="js/front.js"></script>
-     <script src="/js/typeahead.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <script src="/js/typeahead.min.js"></script>
     <script src="/js/search.js"></script>
 </head>
 
 <body>
-       <div class="menu">
-         <form method="post" action="/search" class="search-form">
+    <div class="menu">
+        <form method="post" action="/search" class="search-form">
             <input id="search-bar" type="text" name="search" placeholder="Search ..." class="typeahead tt-query" spellcheck="false" autocomplete="on" name="typeahead">
             <input id="go" type="submit" name="search" value="Go!">
         </form>
@@ -44,7 +45,7 @@
                 </form>
             </div>
             <div class="option c2" onClick="showPasswordChanger()"><a href="#">Modify Password</a></div>
-            <div id="change-password" class="change-password">
+            <div id="change-password" class="change-password" style="display: none;">
                 <div class="current-email">An E-mail confimation is needed to change your paswword</div>
                 <form class="password-changer" method="post">
                     <input class="submit-btn" type="submit" name="sendEmail" value="Send E-mail">

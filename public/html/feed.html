@@ -6,26 +6,31 @@
     <title>Matcha | Match</title>
     <link href="/stylesheets/main.css" rel="stylesheet">
     <link href="/stylesheets/feed.css" rel="stylesheet">
+    <link rel="stylesheet" href="/stylesheets/ion.rangeSlider.css" />
+    <link rel="stylesheet" href="/stylesheets/ion.rangeSlider.skinFlat.css" />
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBylV2tWJmuiBNLN3XK2a-LBtkv3doz6H8"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-    <script src="/js/mustache.js"></script>
     <script src="https://localhost:4433/socket.io/socket.io.js"></script>
-    <script src="https://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js"></script>
-    <script src="/js/front.js"></script>
-    <script src="/js/sortElements.js"></script>
     <script src="/js/typeahead.min.js"></script>
+    <script src="/js/front.js"></script>
     <script src="/js/search.js"></script>
+    <script src="/js/sortElements.js"></script>
+    <style>
+        #go {
+            line-height: 30px;
+        }
+
+    </style>
 </head>
 
 <body>
     <div class="menu">
-        <form method="post" action="/search" class="search-form">
+        <form method="get" action="/search" class="search-form">
             <input id="search-bar" type="text" name="search" placeholder="Search ..." class="typeahead tt-query" spellcheck="false" autocomplete="on" name="typeahead">
-            <input id="go" type="submit" name="search" value="Go!">
-        </form>
+            <input id="go" type="submit" name="search" value="Go!"> </form>
         <a href="/match.html"> <img id="menu-logo" src="/img/mini-logo.png" alt="mini-logo"></a>
-        <a href="/feed.html"><img class="menu-img" src="/img/feed.png"></a>
-        <a href="/profile.html"><img class="menu-img" src="/img/account.png"></a>
+        <a href="#"><img class="menu-img" src="/img/feed.png"></a>
+        <a id="account" href="/profile.html"><img class="menu-img" src="/img/account.png"></a>
         <a href="/message.html"><img class="menu-img" src="/img/envelope.png"></a>
         <a href="/logout.html"><img class="menu-img" src="/img/logout.png"></a>
     </div>
@@ -34,6 +39,14 @@
     <div class="separator"></div>
     <div class="separator"></div>
     <div class="site-content" align="center">
+        <form method="get">
+            <div>AGE
+                <input type="text" id="age" value="" name="age" /> POP
+                <input type="text" id="pop" value="" name="pop" /> LOC
+                <input type="text" id="loc" value="" name="loc" /> TAG
+                <input type="text" id="tag" value="" name="tag" />
+                <input id="filter" type="submit" name="submit" value="filter"> </div>
+        </form>
         <table id="match" class="hud" align="center">
             <tr class="table-title">
                 <th>Profil picture</th>
@@ -41,15 +54,65 @@
                 <th id="age">Age</th>
                 <th id="location">Location</th>
                 <th id="popscore">Popularity</th>
+                <th id="tags">Commun Tags</th>
                 <th>Link to profil</th>
-            </tr>{{>table}}
-        </table>
-    </div>
-    <h1>{{message}}</h1>
+            </tr>{{>table}} </table>
+        <h1>{{message}}</h1> </div>
     <div class="separator"></div>
     <div class="separator"></div>
     <div class="separator"></div>
     <script src="/js/match.js"></script>
+    <script src="/js/ion.rangeSlider.js"></script>
+    <script>
+        $(function() {
+            $("#age").ionRangeSlider({
+                hide_min_max: true,
+                keyboard: true,
+                min: 18,
+                max: 120,
+                from: 0,
+                to: 120,
+                type: 'double',
+                step: 1,
+                grid: true
+            });
+            $("#pop").ionRangeSlider({
+                hide_min_max: true,
+                keyboard: true,
+                min: 0,
+                max: 1000,
+                from: 0,
+                to: 1000,
+                type: 'double',
+                step: 5,
+                grid: true
+            });
+            $("#loc").ionRangeSlider({
+                hide_min_max: true,
+                keyboard: true,
+                min: 0,
+                max: 150,
+                from: 0,
+                to: 150,
+                type: 'double',
+                step: 5,
+                grid: true,
+                postfix: "km"
+            });
+            $("#tag").ionRangeSlider({
+                hide_min_max: true,
+                keyboard: true,
+                min: 0,
+                max: 50,
+                from: 0,
+                to: 50,
+                type: 'double',
+                step: 1,
+                grid: true
+            });
+        });
+
+    </script>
 </body>
 
 </html>
