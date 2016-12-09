@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Matcha | Match</title>
     <link href="/stylesheets/main.css" rel="stylesheet">
+    <link href="/stylesheets/feed.css" rel="stylesheet">
     <link rel="stylesheet" href="/stylesheets/ion.rangeSlider.css" />
     <link rel="stylesheet" href="/stylesheets/ion.rangeSlider.skinFlat.css" />
-    <link href="/stylesheets/feed.css" rel="stylesheet">
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBylV2tWJmuiBNLN3XK2a-LBtkv3doz6H8"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
     <script src="https://localhost:4433/socket.io/socket.io.js"></script>
@@ -35,6 +35,8 @@
     <div class="site-content" align="center">
         <form method="get" id="from-slider">
             <div>
+                <input type="hidden" value="{{search}}" name="search" />
+                <input type="hidden" value="Go!" name="search" />
                 <div class="slider-left">
                     <div class="slider-title">Age</div>
                     <input type="text" id="age" value="" name="age" />
@@ -57,7 +59,7 @@
                 <th id="age">Age</th>
                 <th id="location">Location</th>
                 <th id="popscore">Popularity</th>
-                <th id="tags">Commun Tags</th>
+                <th id="tags">Commun tags</th>
                 <th>Link to profil</th>
             </tr>{{>table}} </table>
         <h1>{{message}}</h1> </div>

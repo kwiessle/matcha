@@ -174,9 +174,7 @@ textarea {
     background: linear-gradient(to bottom right, #7fc4ff, #569ef2);
 }
 
-#go {
-    line-height: 30px;
-}
+
 
 @media only screen and (max-width: 904px) {
     .side-bar {

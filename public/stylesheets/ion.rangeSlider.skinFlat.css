@@ -75,11 +75,11 @@
 .irs-to,
 .irs-single {
     color: #fff;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.333;
     text-shadow: none;
     padding: 1px 5px;
-    background: #ed5565;
+    background: #ffb576;
     -moz-border-radius: 4px;
     border-radius: 4px;
 }
@@ -96,12 +96,12 @@
     margin-left: -3px;
     overflow: hidden;
     border: 3px solid transparent;
-    border-top-color: #ed5565;
+    border-top-color: #ffb576;
 }
 .irs-grid-pol {
-    background: #e1e4e9;
+    background: #646464;
 }
 .irs-grid-text {
-    color: #999;
+    color: #646464;
 }
 .irs-disabled {}

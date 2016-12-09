@@ -171,6 +171,55 @@ tr {
     max-width: 1000px;
     min-width: 700px;
 }
+#from-slider {
+    background: rgba(255, 255, 255, 0.74);
+    width: 100%;
+    max-width: 1000px;
+    display: inline-block;
+    padding-bottom: 10px;
+    border-radius: 10px;
+}
+.irs,
+.js-irs-0,
+.irs-with-grid {
+    max-width: 300px;
+}
+.slider-left {
+    width: 400px;
+    display: inline-block;
+    vertical-align: middle;
+}
+.slider-right {
+    width: 400px;
+    display: inline-block;
+    vertical-align: middle;
+}
+.slider-title {
+    background: rgb(212, 212, 212);
+    width: 100px;
+    height: 30px;
+    line-height: 30px;
+    color: white;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    font-weight: 100;
+    font-size: 15px;
+    padding: 5px;
+}
+#filter {
+    display: block;
+    border: none;
+    padding: 10px;
+    color: white;
+    font-size: 20px;
+    font-weight: 100;
+    width: 80px;
+    border-radius: 5px;
+    background: #7fc4ff;
+    margin: 20px;
+    margin-top: 30px;
+}
 @media only screen and (max-width: 835px) {
     #like,
     #berk,

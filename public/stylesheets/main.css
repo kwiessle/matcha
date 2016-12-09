@@ -70,6 +70,7 @@ a {
     height: 80px;
     font-size: 0;
     width: 300px;
+    line-height: 80px;
 }
 span {
     vertical-align: middle;
@@ -84,6 +85,8 @@ span {
     border-top-right-radius: 5px;
     border-bottom-right-radius: 5px;
     color: #7fc4ff;
+    vertical-align: middle;
+    margin-bottom: 5px;
 }
 .tt-query,
 .tt-hint {

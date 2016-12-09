@@ -209,17 +209,6 @@ app.get('/addtag/:data', function (req, res) {
     }
 })
 
-app.get('/search', function (req, res) {
-    connection.query('SELECT firstname from users where firstname like "%' + req.query.key + '%"', function (err, rows, fields) {
-        if (err) throw err;
-        var data = [];
-        for (i = 0; i < rows.length; i++) {
-            data.push(rows[i].firstname);
-        }
-        res.end(JSON.stringify(data));
-    });
-});
-
 app.get('/profile.html', function (req, res) {
     if (!req.session.user) {
         res.redirect('/');
@@ -661,36 +650,169 @@ app.get('/feed.html', function (req, res) {
     if (!req.session.user) {
         res.redirect("/");
     } else {
-        connection.query("SELECT * FROM users WHERE username = ?", [req.session.user], function (err, rows) {
+        var people = [];
+        var age_min = 18;
+        var age_max = 120;
+        var pop_min = 0;
+        var pop_max = 1000;
+        var loc_min = 0;
+        var loc_max = 150;
+        var tag_min = 0;
+        var tag_max = 50;
+        var tag_me = [];
+        var sexe_tomatch;
+        var sexe_tonotmatch;
+        connection.query("SELECT * FROM users WHERE username = ?", [req.session.user], function (err, row) {
             if (err) throw err;
-            if (!rows[0].profil_pic) {
+            if (!row[0].profil_pic) {
                 res.redirect("/error.html");
-            } else {
-                connection.query("SELECT * FROM users", function (err, rows) {
-                    if (err) throw err;
-                    else {
-                        for (var k in rows) {
-                            rows[k].class = (Number(k) % 2) + 1;
-                            rows[k].birth = profile.age(rows[k].birthday);
-                        }
-                        res.render("feed.html", {
-                            table: {
-                                infos: rows
-                            }
-                        })
-                    }
-                })
             }
+            connection.query("SELECT tag FROM tags WHERE username= ?", [req.session.user], function (err, tags) {
+                for (var p in tags) {
+                    tag_me[p] = tags[p].tag;
+                }
+                if (req.query.pop) {
+                    pop_min = req.query.pop.split(";")[0];
+                    pop_max = req.query.pop.split(";")[1];
+                }
+                if (req.query.loc) {
+                    loc_min = req.query.loc.split(";")[0];
+                    loc_max = req.query.loc.split(";")[1];
+                }
+                if (req.query.age) {
+                    age_min = req.query.age.split(";")[0];
+                    age_max = req.query.age.split(";")[1];
+                }
+                if (req.query.tag) {
+                    tag_min = req.query.tag.split(";")[0];
+                    tag_max = req.query.tag.split(";")[1];
+                }
+                if (req.session.sexe === "male") {
+                    if (req.session.sexual_or === "bi") {
+                        sexe_tonotmatch = ["male", "hetero", "female", "gay"]
+                    } else if (req.session.sexual_or === "hetero") {
+                        sexe_tomatch = ["female", "hetero", "bi"];
+                    } else if (req.session.sexual_or === "gay") {
+                        sexe_tomatch = ["male", "gay", "bi"];
+                    }
+                } else if (req.session.sexe === "female") {
+                    if (req.session.sexual_or === "bi") {
+                        sexe_tonotmatch = ["female", "hetero", "male", "gay"]
+                    } else if (req.session.sexual_or === "hetero") {
+                        sexe_tomatch = ["male", "hetero", "bi"];
+                    } else if (req.session.sexual_or === "gay") {
+                        sexe_tomatch = ["female", "gay", "bi"];
+                    }
+                }
+                if (sexe_tomatch) {
+                    connection.query("SELECT * FROM users WHERE (pop BETWEEN ? AND ?) AND username != ? AND profil_pic is not null AND (sexe = ? AND (sexual_or = ? OR sexual_or = ?)) AND  username NOT IN (SELECT blocked FROM block WHERE block_by = ?)", [pop_min, pop_max, req.session.user, sexe_tomatch[0], sexe_tomatch[1], sexe_tomatch[2], req.session.user], function (err, rows) {
+                        if (err) throw err;
+                        else {
+                            (function (callback) {
+                                var z = 0;
+                                if (rows[0]) {
+                                    for (var k in rows) {
+                                        rows[k].distance = getDistanceFromLatLonInKm(row[0].currlat, row[0].currlong, rows[k].currlat, rows[k].currlong);
+                                        rows[k].birth = profile.age(rows[k].birthday);
+                                        rows[k].communtag = 0;
+                                        (function (k) {
+                                            connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
+                                                for (var a in tagstofind) {
+                                                    if (tag_me.includes(tagstofind[a].tag) === true) {
+                                                        rows[k].communtag = rows[k].communtag + 1;
+                                                    }
+                                                }
+                                                if (Number(rows[k].birth) >= Number(age_min) && Number(rows[k].birth) <= Number(age_max)) {
+                                                    if (Number(rows[k].communtag) >= Number(tag_min) && Number(rows[k].communtag) <= Number(tag_max)) {
+                                                        if (Number(rows[k].distance) >= Number(loc_min) && Number(rows[k].distance) <= Number(loc_max)) {
+                                                            people[z] = rows[k];
+                                                            z++;
+                                                        }
+                                                    }
+                                                }
+                                                if (!rows[Number(k) + 1]) {
+                                                    callback(people);
+                                                }
+                                            })
+                                        })(k);
+                                    }
+                                } else {
+                                    callback(people);
+                                }
+                            })(function (people) {
+                                if (people[0]) {
+                                    res.render("feed.html", {
+                                        table: {
+                                            infos: people
+                                        }
+                                    })
+                                } else {
+                                    res.render("feed.html", {
+                                        message: "nobody match your profil"
+                                    })
+                                }
+                            })
+                        }
+                    })
+                } else if (sexe_tonotmatch) {
+                    connection.query("SELECT * FROM users WHERE (pop BETWEEN ? AND ?) AND username != ? AND profil_pic is not null AND ((sexe = ? AND sexual_or != ?) OR (sexe = ? AND sexual_or != ?)) AND  username NOT IN (SELECT blocked FROM block WHERE block_by = ?)", [pop_min, pop_max, req.session.user, sexe_tonotmatch[0], sexe_tonotmatch[1], sexe_tonotmatch[2], sexe_tonotmatch[3], req.session.user], function (err, rows) {
+                        if (err) throw err;
+                        else {
+                            (function (callback) {
+                                var z = 0;
+                                if (rows[0]) {
+                                    for (var k in rows) {
+                                        rows[k].birth = profile.age(rows[k].birthday);
+                                        rows[k].communtag = 0;
+                                        (function (k) {
+                                            connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
+                                                for (var a in tagstofind) {
+                                                    if (tag_me.includes(tagstofind[a].tag) === true) {
+                                                        rows[k].communtag = rows[k].communtag + 1;
+                                                    }
+                                                }
+                                                if (Number(rows[k].birth) >= Number(age_min) && Number(rows[k].birth) <= Number(age_max)) {
+                                                    if (Number(rows[k].communtag) >= Number(tag_min) && Number(rows[k].communtag) <= Number(tag_max)) {
+                                                        people[z] = rows[k];
+                                                        z++;
+                                                    }
+                                                }
+                                                if (!rows[Number(k) + 1]) {
+                                                    callback(people);
+                                                }
+                                            })
+                                        })(k);
+                                    }
+                                } else {
+                                    callback(people);
+                                }
+                            })(function (people) {
+                                if (people[0]) {
+                                    res.render("feed.html", {
+                                        table: {
+                                            infos: people
+                                        }
+                                    })
+                                } else {
+                                    res.render("feed.html", {
+                                        message: "nobody match your profil"
+                                    })
+                                }
+                            })
+                        }
+                    })
+                }
+            })
         })
     }
-})
+});
 
 app.get("/blocked.html", function (req, res) {
     var infos = [];
     if (!req.session.user) {
         res.redirect("/");
     } else {
-        connection.query("SELECT * FROM block WHERE blocker =?", [req.session.user], function (err, rows) {
+        connection.query("SELECT * FROM block WHERE block_by =?", [req.session.user], function (err, rows) {
             if (err) throw err;
             if (rows[0]) {
                 for (var k in rows) {
@@ -730,7 +852,7 @@ app.get('/unblock/:user', function (req, res) {
     if (!req.params.user) {
         res.redirect('/profile.html')
     } else {
-        connection.query("DELETE FROM block WHERE blocker = ? AND blocked = ?", [req.session.user, req.params.user], function (err) {
+        connection.query("DELETE FROM block WHERE block_by = ? AND blocked = ?", [req.session.user, req.params.user], function (err) {
             if (err) throw err;
             res.redirect('/blocked.html')
         })
@@ -746,17 +868,7 @@ app.get('/error.html', function (req, res) {
 
 })
 
-app.get('/feed.html', function (req, res) {
-    if (req.session.user) {
-        if (req.session.profil_pic) {
-            res.render('feed.html')
-        } else {
-            res.redirect('/error.html')
-        }
-    } else {
-        res.redirect('/')
-    }
-})
+
 
 app.get("/message.html", function (req, res) {
     var infos = [];
@@ -839,6 +951,284 @@ app.get("/message.html/:user", function (req, res) {
     }
 })
 
+
+
+
+app.get('/search', function (req, res) {
+    if (!req.session.user) {
+        res.redirect("/");
+    } else {
+        if (req.query.submit) {
+            var people = [];
+            var age_min = 18;
+            var age_max = 120;
+            var pop_min = 0;
+            var pop_max = 1000;
+            var loc_min = 0;
+            var loc_max = 150;
+            var tag_min = 0;
+            var tag_max = 50;
+            var tag_me = [];
+            var tag_tofind = [];
+            var firstword = req.query.search[0].split(" ")[0];
+            var lastword = req.query.search[0].split(" ")[1];
+            connection.query("SELECT * FROM users WHERE username = ?", [req.session.user], function (err, row) {
+                if (err) throw err;
+                if (!row[0].profil_pic) {
+                    res.redirect("/edit_profil.html");
+                }
+                connection.query("SELECT tag FROM tags WHERE username= ?", [req.session.user], function (err, tags) {
+                    if (tags[0]) {
+                        for (var p in tags) {
+                            tag_me[p] = tags[p].tag;
+                        }
+                    }
+                    if (req.query.pop) {
+                        pop_min = req.query.pop.split(";")[0];
+                        pop_max = req.query.pop.split(";")[1];
+                    }
+                    if (req.query.loc) {
+                        loc_min = req.query.loc.split(";")[0];
+                        loc_max = req.query.loc.split(";")[1];
+                    }
+                    if (req.query.age) {
+                        age_min = req.query.age.split(";")[0];
+                        age_max = req.query.age.split(";")[1];
+                    }
+                    if (req.query.tag) {
+                        tag_min = req.query.tag.split(";")[0];
+                        tag_max = req.query.tag.split(";")[1];
+                    }
+                    if (firstword && lastword) {
+                        connection.query('SELECT * FROM users WHERE (pop BETWEEN ? AND ?) AND   ((firstname like "%' + firstword + '%" AND lastname like "%' + lastword + '%") OR (firstname like "%' + lastword + '%" AND lastname like "%' + firstword + '%")) AND  username NOT IN (SELECT blocked FROM block WHERE block_by = ?)', [pop_min, pop_max, req.session.user], function (err, rows) {
+                            if (err) throw err;
+                            else {
+                                (function (callback) {
+
+                                    for (var k in rows) {
+                                        var z = 0;
+                                        rows[k].birth = profile.age(rows[k].birthday);
+                                        rows[k].communtag = 0;
+                                        rows[k].distance = getDistanceFromLatLonInKm(row[0].currlat, row[0].currlong, rows[k].currlat, rows[k].currlong);
+                                        (function (k) {
+                                            connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
+                                                for (var a in tagstofind) {
+                                                    if (tag_me.includes(tagstofind[a].tag) === true) {
+                                                        rows[k].communtag = rows[k].communtag + 1;
+                                                    }
+                                                }
+                                                if (Number(rows[k].birth) >= Number(age_min) && Number(rows[k].birth) <= Number(age_max)) {
+                                                    if (Number(rows[k].communtag) >= Number(tag_min) && Number(rows[k].communtag) <= Number(tag_max)) {
+                                                        if (Number(rows[k].distance) >= Number(loc_min) && Number(rows[k].distance) <= Number(loc_max)) {
+
+                                                            people[z] = rows[k];
+                                                            z++;
+                                                        }
+                                                    }
+                                                }
+                                                if (!rows[Number(k) + 1]) {
+                                                    console.log(people);
+                                                    callback(people);
+                                                }
+                                            })
+                                        })(k);
+                                    }
+                                })(function (people) {
+                                    if (people[0]) {
+                                        res.render("search.html", {
+                                            search: req.query.search[0],
+                                            table: {
+                                                infos: people
+                                            }
+                                        })
+                                    } else {
+                                        res.render("search.html", {
+                                            search: req.query.search[0],
+                                            message: "Nobody match this paramters"
+                                        })
+                                    }
+                                })
+                            }
+                        })
+                    } else if (firstword && !lastword) {
+                        connection.query('SELECT * FROM users WHERE (pop BETWEEN ? AND ?) AND ( firstname like "%' + firstword + '%"  OR  lastname like "%' + firstword + '%") AND  username NOT IN (SELECT blocked FROM block WHERE block_by = ?)', [pop_min, pop_max, req.session.user], function (err, rows) {
+                            if (err) throw err;
+                            else {
+                                (function (callback) {
+                                    for (var k in rows) {
+                                        var z = 0;
+                                        rows[k].birth = profile.age(rows[k].birthday);
+                                        rows[k].communtag = 0;
+                                        rows[k].distance = getDistanceFromLatLonInKm(row[0].currlat, row[0].currlong, rows[k].currlat, rows[k].currlong);
+                                        (function (k) {
+                                            connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
+                                                for (var a in tagstofind) {
+                                                    if (tag_me.includes(tagstofind[a].tag) === true) {
+                                                        rows[k].communtag = rows[k].communtag + 1;
+                                                    }
+                                                }
+                                                if (Number(rows[k].birth) >= Number(age_min) && Number(rows[k].birth) <= Number(age_max)) {
+                                                    if (Number(rows[k].communtag) >= Number(tag_min) && Number(rows[k].communtag) <= Number(tag_max)) {
+                                                        if (Number(rows[k].distance) >= Number(loc_min) && Number(rows[k].distance) <= Number(loc_max)) {
+                                                            people[z] = rows[k];
+                                                            z++;
+                                                        }
+                                                    }
+                                                }
+                                                if (!rows[Number(k) + 1]) {
+                                                    callback(people);
+                                                }
+                                            })
+                                        })(k);
+                                    }
+                                })(function (people) {
+                                    if (people[0]) {
+                                        res.render("search.html", {
+                                            search: req.query.search[0],
+                                            homepage: {
+                                                infos: people
+                                            }
+                                        })
+                                    } else {
+                                        res.render("search.html", {
+                                            search: req.query.search[0],
+                                            message: "Nobody match this paramaters"
+                                        })
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
+            })
+        } else if (req.query.key) {
+            var data = [];
+            connection.query('SELECT firstname,lastname from users where (firstname like "%' + req.query.key + '%" OR lastname like "%' + req.query.key + '%") AND  username NOT IN (SELECT blocked FROM block WHERE block_by = ?)', [req.session.user], function (err, rows, fields) {
+                if (err) throw err;
+                for (i = 0; i < rows.length; i++) {
+                    data.push(rows[i].firstname + " " + rows[i].lastname);
+                }
+                res.end(JSON.stringify(data));
+            });
+        } else if (req.query.search) {
+            var firstword = req.query.search[0].split(" ")[0];
+            var lastword = req.query.search[0].split(" ")[1];
+            var tag_me = [];
+            var tag_tofind = [];
+            connection.query("SELECT tag FROM tags WHERE username= ?", [req.session.user], function (err, tags) {
+                if (tags[0]) {
+                    for (var p in tags) {
+                        tag_me[p] = tags[p].tag;
+                    }
+                }
+                if (firstword && lastword) {
+                    var tag_tofind = [];
+                    connection.query("SELECT username FROM users WHERE ((firstname = ? AND lastname = ?) OR (firstname = ? AND lastname = ?)) AND  username NOT IN (SELECT blocked FROM block WHERE block_by = ?)", [firstword, lastword, lastword, firstword, req.session.user], function (err, rows) {
+                        if (err) throw err;
+                        if (rows[0] && !rows[1]) {
+                            if (rows[0].username === req.session.user) {
+                                res.redirect('/profile.html');
+                            } else {
+                                res.redirect('/user.html/' + rows[0].username)
+                            }
+                        } else {
+                            connection.query('SELECT * from users where ((firstname like "%' + firstword + '%" AND lastname like "%' + lastword + '%") OR (firstname like "%' + lastword + '%" AND lastname like "%' + firstword + '%")) AND  username NOT IN (SELECT blocked FROM block WHERE block_by = ?)', [req.session.user], function (err, rows) {
+                                if (err) throw err;
+                                if (!rows[0]) {
+                                    res.render("search.html", {
+                                        message: "Nobobdy match this name"
+                                    })
+                                } else {
+                                    (function (callback) {
+                                        for (var k in rows) {
+                                            var z = 0;
+                                            rows[k].birth = profile.age(rows[k].birthday);
+                                            rows[k].communtag = 0;
+                                            (function (k) {
+                                                connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
+                                                    for (var a in tagstofind) {
+                                                        if (tag_me.includes(tagstofind[a].tag) === true) {
+                                                            rows[k].communtag = rows[k].communtag + 1;
+                                                        }
+                                                    }
+                                                    if (!rows[Number(k) + 1]) {
+                                                        console.log(rows);
+                                                        callback(rows);
+                                                    }
+                                                })
+                                            })(k);
+                                        }
+                                    })(function (people) {
+                                        res.render("search.html", {
+                                            search: req.query.search[0],
+                                            table: {
+                                                infos: rows
+                                            }
+                                        })
+                                    })
+                                }
+                            })
+                        }
+                    })
+                } else if (firstword && !lastword) {
+                    connection.query("SELECT username FROM users WHERE (firstname = ?  OR  lastname = ?) AND  username NOT IN (SELECT blocked FROM block WHERE block_by = ?)", [firstword, firstword, req.session.user], function (err, rows) {
+                        if (err) throw err;
+                        if (rows[0] && !rows[1]) {
+                            if (rows[0].username === req.session.user) {
+                                res.redirect('/profile.html');
+                            } else {
+                                res.redirect('/user.html/' + rows[0].username)
+                            }
+                        } else {
+                            connection.query('SELECT * from users where (firstname like "%' + firstword + '%"  OR  lastname like "%' + firstword + '%") AND  username NOT IN (SELECT blocked FROM block WHERE block_by = ?)', [req.session.user], function (err, rows) {
+                                if (err) throw err;
+                                if (!rows[0]) {
+                                    res.render("search.html", {
+                                        message: "Nobobdy match this name"
+                                    })
+                                } else {
+                                    (function (callback) {
+                                        for (var k in rows) {
+                                            var z = 0;
+                                            rows[k].birth = profile.age(rows[k].birthday);
+                                            rows[k].communtag = 0;
+                                            (function (k) {
+                                                connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
+                                                    for (var a in tagstofind) {
+                                                        if (tag_me.includes(tagstofind[a].tag) === true) {
+                                                            rows[k].communtag = rows[k].communtag + 1;
+                                                        }
+                                                    }
+                                                    if (!rows[Number(k) + 1]) {
+                                                        console.log(rows);
+                                                        callback(rows);
+                                                    }
+                                                })
+                                            })(k);
+                                        }
+                                    })(function (people) {
+                                        res.render("search.html", {
+                                            search: req.query.search[0],
+                                            table: {
+                                                infos: rows
+                                            }
+                                        })
+                                    })
+                                }
+                            })
+                        }
+                    })
+                } else {
+                    res.redirect(req.get('referer'));
+                }
+            })
+        }
+    }
+});
+
+
+
+
 /*     P  A  G  E  S      M  A  N  I  P  U  L  A  T  I  O  N  S     -     E X P R E S S   -    P  O  S  T    */
 
 
@@ -863,6 +1253,7 @@ app.post('/', function (req, res) {
             req.session.token = rows[0].token;
             req.session.bio = rows[0].bio;
             req.session.profil_pic = rows[0].profil_pic;
+            req.session.sexual_or = rows[0].sexual_or;
             req.session.pop = rows[0].pop;
             req.session.priority = 0;
             connection.query("UPDATE users SET login = ?, sessionID = ? WHERE username = ?", ["online", req.sessionID, req.session.user])
@@ -1292,10 +1683,10 @@ app.post('/blocker/:user', function (req, res) {
         if (req.body.pov === 'Block') {
             connection.query("SELECT username FROM users WHERE username = ?", [req.params.user], function (err, rows) {
                 if (rows.length) {
-                    connection.query("SELECT * from block WHERE blocker = ? AND blocked = ?", [req.session.user, req.params.user],
+                    connection.query("SELECT * from block WHERE block_by = ? AND blocked = ?", [req.session.user, req.params.user],
                         function (err, rows) {
                             if (!rows.length) {
-                                connection.query("INSERT INTO block(blocker, blocked) VALUES(?,?)", [req.session.user, req.params.user], function (err) {
+                                connection.query("INSERT INTO block(block_by, blocked) VALUES(?,?)", [req.session.user, req.params.user], function (err) {
                                     if (err) throw err;
                                     else {
                                         res.redirect('/user.html/' + req.params.user)
@@ -1334,38 +1725,6 @@ app.post('/blocker/:user', function (req, res) {
     }
 })
 
-app.post('/search', function (req, res) {
-    if (req.session.profil_pic) {
-        if (req.body.search[0]) {
-            connection.query("SELECT username FROM users WHERE firstname = ?", [req.body.search[0]], function (err, rows) {
-                if (err) throw err;
-                if (rows[0]) {
-                    console.log(rows[0].username);
-                    res.redirect('/user.html/' + rows[0].username)
-                } else {
-                    connection.query('SELECT * from users where firstname like "%' + req.body.search[0] + '%"', function (err, rows) {
-                        if (err) throw err;
-                        for (var k in rows) {
-                            rows[k].class = (Number(k) % 2) + 1;
-                            rows[k].birth = profile.age(rows[k].birthday);
-                        }
-                        res.render("feed.html", {
-                            table: {
-                                infos: rows
-                            }
-                        })
-                    })
-                }
-            })
-        } else {
-            res.redirect(req.get('referer'));
-        }
-    } else {
-        res.redirect('/error.html')
-    }
-})
-
-
 
 app.get('*', function (req, res) {
     if (!req.session.user) {
@@ -1397,17 +1756,16 @@ io.on('connection', function (socket) {
     var cookies = cookieParser.signedCookies(cookie.parse(socket.handshake.headers.cookie), sess.secret);
     var sessionid = cookies['connect.sid'];
     socket.on("location", function (data) {
-        console.log(data);
         if (data) {
             var location = data.location;
             if (location[1]) {
                 var arrondissement = location[1].split(',');
-                connection.query("UPDATE users SET location = ? WHERE sessionID = ?", [arrondissement[1], sessionid], function (err) {
+                connection.query("UPDATE users SET location = ?, currlat =?, currlong = ? WHERE sessionID = ?", [arrondissement[1], data.lat, data.long, sessionid], function (err) {
                     if (err) throw err;
                 });
             } else {
                 var arrondissement = location[0].split(',');
-                connection.query("UPDATE users SET location = ? WHERE sessionID = ?", [arrondissement[1], sessionid], function (err) {
+                connection.query("UPDATE users SET location = ?, currlat =?, currlong = ? WHERE sessionID = ?", [arrondissement[1], data.lat, data.long, sessionid], function (err) {
                     if (err) throw err;
                 });
             }
@@ -1422,3 +1780,17 @@ io.on('connection', function (socket) {
         console.log(err);
     })
 });
+
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2 - lat1); // deg2rad below
+    var dLon = deg2rad(lon2 - lon1);
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var d = R * c; // Distance in km
+    return d;
+}
+
+function deg2rad(deg) {
+    return deg * (Math.PI / 180)
+}
