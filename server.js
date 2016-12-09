@@ -338,7 +338,7 @@ app.get('/deletetag/:data', function (req, res) {
 })
 
 app.get('/tag/:data', function (req, res) {
-    var infos = [];  
+    var infos = [];
     if (req.params.data) {
         connection.query("SELECT username FROM tags WHERE tag =? ", [req.params.data], function (err, rows) {
             if (err) throw err;
@@ -357,7 +357,6 @@ app.get('/tag/:data', function (req, res) {
                             }
                         });
                     })(k, function () {
-                        console.log(infos);
                         res.render("feed.html", {
                             table: {
                                 infos: infos
@@ -1027,7 +1026,6 @@ app.get('/search', function (req, res) {
                                                     }
                                                 }
                                                 if (!rows[Number(k) + 1]) {
-                                                    console.log(people);
                                                     callback(people);
                                                 }
                                             })
@@ -1152,7 +1150,6 @@ app.get('/search', function (req, res) {
                                                         }
                                                     }
                                                     if (!rows[Number(k) + 1]) {
-                                                        console.log(rows);
                                                         callback(rows);
                                                     }
                                                 })
@@ -1200,7 +1197,6 @@ app.get('/search', function (req, res) {
                                                         }
                                                     }
                                                     if (!rows[Number(k) + 1]) {
-                                                        console.log(rows);
                                                         callback(rows);
                                                     }
                                                 })
@@ -1433,7 +1429,6 @@ app.post('/updates', function (req, res) {
                             connection.query('SELECT * FROM dictionary WHERE value = ?', [results[k]], function (err, row_dic) {
                                 if (err) throw err;
                                 if (!row_dic[0]) {
-                                    console.log(results[k]);
                                     connection.query("INSERT INTO dictionary(value, score) VALUES(?,1)", [results[k]], function (err) {
                                         if (err) throw err;
                                     })
@@ -1640,7 +1635,6 @@ app.post('/liker/:user', function (req, res) {
                                 else {
                                     connection.query("SELECT * from liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
                                         if (rows.length) {
-                                            console.log('Param : ' + req.params.user + '    SESSIO? :    ' + req.session.user);
                                             connection.query("INSERT INTO matchs(matcher, matched) VALUES(?,?)", [req.session.user, req.params.user], function (err) {
                                                 if (err) throw err;
                                             })
@@ -1650,7 +1644,6 @@ app.post('/liker/:user', function (req, res) {
                                 res.redirect('/user.html/' + req.params.user)
                             })
                         } else {
-                            console.log('already liked this fdp');
                             res.redirect('/user.html/' + req.params.user)
                         }
                     })
