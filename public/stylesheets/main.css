@@ -7,14 +7,17 @@ html {
     font-family: 'Open Sans', sans-serif;
     width: 100%;
 }
+
 .separator {
     height: 30px;
     width: 100%;
 }
+
 .site-content {
     width: 100%;
     height: auto;
 }
+
 .menu {
     width: 100%;
     height: 80px;
@@ -26,16 +29,19 @@ html {
     background: -moz-linear-gradient(bottom right, #7fc4ff, #569ef2);
     background: linear-gradient(to bottom right, #7fc4ff, #569ef2);
 }
+
 #menu-logo {
     height: 60px;
     left: 20px;
     float: left;
     margin: 10px;
 }
+
 a {
     text-decoration: none;
     color: black;
 }
+
 .menu-img {
     width: 25px;
     vertical-align: middle;
@@ -45,6 +51,7 @@ a {
     filter: invert(100%);
     -webkit-filter: invert(100%);
 }
+
 #search-bar {
     width: 130px;
     height: 30px;
@@ -59,12 +66,15 @@ a {
     background-size: 15px;
     outline: none;
 }
+
 #search-bar:focus {
     width: 230px;
 }
+
 #search-bar::-webkit-input-placeholder {
     color: white;
 }
+
 .search-form {
     display: inline-block;
     height: 80px;
@@ -72,9 +82,11 @@ a {
     width: 300px;
     line-height: 80px;
 }
+
 span {
     vertical-align: middle;
 }
+
 #go {
     height: 30px;
     border: none;
@@ -88,6 +100,7 @@ span {
     vertical-align: middle;
     margin-bottom: 5px;
 }
+
 .tt-query,
 .tt-hint {
     color: #fff;
@@ -98,11 +111,14 @@ span {
     outline: medium none;
     width: 100px;
     padding-left: 35px;
+    width: 100%;
 }
+
 .tt-hint {
     color: #999999;
     line-height: 22px;
 }
+
 .tt-dropdown-menu {
     background-color: #FFFFFF;
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
@@ -110,15 +126,18 @@ span {
     width: 265px;
     margin-top: 10px;
 }
+
 .tt-suggestion {
     font-size: 15px;
     line-height: 15px;
     padding: 10px;
 }
+
 .tt-suggestion.tt-is-under-cursor {
     background-color: #e8e8e8;
     color: #000;
 }
+
 .tt-suggestion p {
     margin: 0;
 }

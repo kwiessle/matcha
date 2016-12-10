@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    //port: 8889,
-    port: 3307,
+    port: 8889,
+    //port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -389,6 +389,9 @@ app.get('/updates', function (req, res) {
 app.get('/user.html/:user', function (req, res) {
     if (!req.session.user) {
         res.redirect('/');
+    }
+    if (!req.session.profil_pic) {
+        res.redirect('/error.html')
     } else {
         if (req.params.user === req.session.user) {
             res.redirect('/profile.html');
@@ -648,6 +651,9 @@ app.get("/history.html", function (req, res) {
 app.get('/feed.html', function (req, res) {
     if (!req.session.user) {
         res.redirect("/");
+    }
+    if (!req.session.profil_pic) {
+        res.redirect('/error.html');
     } else {
         var people = [];
         var age_min = 18;
@@ -663,9 +669,6 @@ app.get('/feed.html', function (req, res) {
         var sexe_tonotmatch;
         connection.query("SELECT * FROM users WHERE username = ?", [req.session.user], function (err, row) {
             if (err) throw err;
-            if (!row[0].profil_pic) {
-                res.redirect("/error.html");
-            }
             connection.query("SELECT tag FROM tags WHERE username= ?", [req.session.user], function (err, tags) {
                 for (var p in tags) {
                     tag_me[p] = tags[p].tag;
@@ -1003,33 +1006,36 @@ app.get('/search', function (req, res) {
                             if (err) throw err;
                             else {
                                 (function (callback) {
-
-                                    for (var k in rows) {
-                                        var z = 0;
-                                        rows[k].birth = profile.age(rows[k].birthday);
-                                        rows[k].communtag = 0;
-                                        rows[k].distance = getDistanceFromLatLonInKm(row[0].currlat, row[0].currlong, rows[k].currlat, rows[k].currlong);
-                                        (function (k) {
-                                            connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
-                                                for (var a in tagstofind) {
-                                                    if (tag_me.includes(tagstofind[a].tag) === true) {
-                                                        rows[k].communtag = rows[k].communtag + 1;
-                                                    }
-                                                }
-                                                if (Number(rows[k].birth) >= Number(age_min) && Number(rows[k].birth) <= Number(age_max)) {
-                                                    if (Number(rows[k].communtag) >= Number(tag_min) && Number(rows[k].communtag) <= Number(tag_max)) {
-                                                        if (Number(rows[k].distance) >= Number(loc_min) && Number(rows[k].distance) <= Number(loc_max)) {
-
-                                                            people[z] = rows[k];
-                                                            z++;
+                                    if (rows[0]) {
+                                        for (var k in rows) {
+                                            var z = 0;
+                                            rows[k].birth = profile.age(rows[k].birthday);
+                                            rows[k].communtag = 0;
+                                            rows[k].distance = getDistanceFromLatLonInKm(row[0].currlat, row[0].currlong, rows[k].currlat, rows[k].currlong);
+                                            (function (k) {
+                                                connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
+                                                    for (var a in tagstofind) {
+                                                        if (tag_me.includes(tagstofind[a].tag) === true) {
+                                                            rows[k].communtag = rows[k].communtag + 1;
                                                         }
                                                     }
-                                                }
-                                                if (!rows[Number(k) + 1]) {
-                                                    callback(people);
-                                                }
-                                            })
-                                        })(k);
+                                                    if (Number(rows[k].birth) >= Number(age_min) && Number(rows[k].birth) <= Number(age_max)) {
+                                                        if (Number(rows[k].communtag) >= Number(tag_min) && Number(rows[k].communtag) <= Number(tag_max)) {
+                                                            if (Number(rows[k].distance) >= Number(loc_min) && Number(rows[k].distance) <= Number(loc_max)) {
+
+                                                                people[z] = rows[k];
+                                                                z++;
+                                                            }
+                                                        }
+                                                    }
+                                                    if (!rows[Number(k) + 1]) {
+                                                        callback(people);
+                                                    }
+                                                })
+                                            })(k);
+                                        }
+                                    } else {
+                                        callback(people);
                                     }
                                 })(function (people) {
                                     if (people[0]) {
@@ -1053,31 +1059,37 @@ app.get('/search', function (req, res) {
                             if (err) throw err;
                             else {
                                 (function (callback) {
-                                    for (var k in rows) {
-                                        var z = 0;
-                                        rows[k].birth = profile.age(rows[k].birthday);
-                                        rows[k].communtag = 0;
-                                        rows[k].distance = getDistanceFromLatLonInKm(row[0].currlat, row[0].currlong, rows[k].currlat, rows[k].currlong);
-                                        (function (k) {
-                                            connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
-                                                for (var a in tagstofind) {
-                                                    if (tag_me.includes(tagstofind[a].tag) === true) {
-                                                        rows[k].communtag = rows[k].communtag + 1;
-                                                    }
-                                                }
-                                                if (Number(rows[k].birth) >= Number(age_min) && Number(rows[k].birth) <= Number(age_max)) {
-                                                    if (Number(rows[k].communtag) >= Number(tag_min) && Number(rows[k].communtag) <= Number(tag_max)) {
-                                                        if (Number(rows[k].distance) >= Number(loc_min) && Number(rows[k].distance) <= Number(loc_max)) {
-                                                            people[z] = rows[k];
-                                                            z++;
+                                    if (rows[0]) {
+
+
+                                        for (var k in rows) {
+                                            var z = 0;
+                                            rows[k].birth = profile.age(rows[k].birthday);
+                                            rows[k].communtag = 0;
+                                            rows[k].distance = getDistanceFromLatLonInKm(row[0].currlat, row[0].currlong, rows[k].currlat, rows[k].currlong);
+                                            (function (k) {
+                                                connection.query("SELECT tag FROM tags WHERE username = ?", [rows[k].username], function (err, tagstofind) {
+                                                    for (var a in tagstofind) {
+                                                        if (tag_me.includes(tagstofind[a].tag) === true) {
+                                                            rows[k].communtag = rows[k].communtag + 1;
                                                         }
                                                     }
-                                                }
-                                                if (!rows[Number(k) + 1]) {
-                                                    callback(people);
-                                                }
-                                            })
-                                        })(k);
+                                                    if (Number(rows[k].birth) >= Number(age_min) && Number(rows[k].birth) <= Number(age_max)) {
+                                                        if (Number(rows[k].communtag) >= Number(tag_min) && Number(rows[k].communtag) <= Number(tag_max)) {
+                                                            if (Number(rows[k].distance) >= Number(loc_min) && Number(rows[k].distance) <= Number(loc_max)) {
+                                                                people[z] = rows[k];
+                                                                z++;
+                                                            }
+                                                        }
+                                                    }
+                                                    if (!rows[Number(k) + 1]) {
+                                                        callback(people);
+                                                    }
+                                                })
+                                            })(k);
+                                        }
+                                    } else {
+                                        callback(people);
                                     }
                                 })(function (people) {
                                     if (people[0]) {
@@ -1384,6 +1396,7 @@ app.post('/updates', function (req, res) {
             connection.query("UPDATE users SET sexual_or = ? WHERE username = ?", [req.body.orientation, req.session.user], function (err) {
                 if (err) throw err;
             })
+            req.session.sexual_or = req.body.orientation;
             orientation = 'Orientation updated';
         }
         if (req.body.location) {
@@ -1752,13 +1765,15 @@ io.on('connection', function (socket) {
         if (data) {
             var location = data.location;
             if (location[1]) {
-                var arrondissement = location[1].split(',');
-                connection.query("UPDATE users SET location = ?, currlat =?, currlong = ? WHERE sessionID = ?", [arrondissement[1], data.lat, data.long, sessionid], function (err) {
+                var arrondissement = location[1].split(',')[1];
+                arrondissement = arrondissement.split('-')[0];
+                connection.query("UPDATE users SET location = ?, currlat =?, currlong = ? WHERE sessionID = ?", [arrondissement, data.lat, data.long, sessionid], function (err) {
                     if (err) throw err;
                 });
             } else {
-                var arrondissement = location[0].split(',');
-                connection.query("UPDATE users SET location = ?, currlat =?, currlong = ? WHERE sessionID = ?", [arrondissement[1], data.lat, data.long, sessionid], function (err) {
+                var arrondissement = location[0].split(',')[1];
+                arrondissement = arrondissement.split('-')[0];
+                connection.query("UPDATE users SET location = ?, currlat =?, currlong = ? WHERE sessionID = ?", [arrondissement, data.lat, data.long, sessionid], function (err) {
                     if (err) throw err;
                 });
             }
