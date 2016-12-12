@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    port: 8889,
-    //port: 3307,
+    //port: 8889,
+    port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -97,6 +97,7 @@ connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`block` ( `block_by` VARCH
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`UserComment` ( `UserId` INT(5) NOT NULL , UserName VARCHAR(255) NOT NULL , `Comment` VARCHAR(255) NOT NULL) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`notification` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `sender` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , `reciever` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , `context` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`dictionary` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `value` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `score` INT(5) NOT NULL DEFAULT '0' , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`messages` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `sender` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `reciehver` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `message` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;")
 connection.query("use matcha");
 
 
@@ -127,6 +128,16 @@ app.get('/', function (req, res) {
     })
 });
 
+
+/*app.get('/messages_checker', function (req, res) {
+    connection.query("SELECT * FROM messages WHERE sender = ? AND reciever = ?", [req.session.user], function (err, rows, fields) {
+        if (err) throw err;
+        for (i = 0; i < rows.length; i++) {
+            data.push(rows[i].firstname + " " + rows[i].lastname);
+        }
+        res.end(JSON.stringify(data));
+    });
+})*/
 
 
 
@@ -873,9 +884,7 @@ app.get('/error.html', function (req, res) {
 
 })
 
-
-
-app.get("/message.html", function (req, res) {
+app.get('/contact.html', function (req, res) {
     var infos = [];
     var infos_tmp = [];
     if (!req.session.user) {
@@ -886,8 +895,11 @@ app.get("/message.html", function (req, res) {
             if (rows[0]) {
                 for (var k in rows) {
                     (function (k) {
-                        if (rows[k].matcher !== req.session.user) infos_tmp[k] = rows[k].matcher;
-                        else if (rows[k].matched !== req.session.user) infos_tmp[k] = rows[k].matched;
+                        if (rows[k].matcher !== req.session.user) {
+                            infos_tmp[k] = rows[k].matcher;
+                        } else if (rows[k].matched !== req.session.user) {
+                            infos_tmp[k] = rows[k].matched;
+                        }
                     })(k);
                 }
                 for (var j in infos_tmp) {
@@ -895,6 +907,7 @@ app.get("/message.html", function (req, res) {
                         connection.query("SELECT * FROM users WHERE username = ?", [infos_tmp[j]], function (err, data) {
                             infos[j] = data[0];
                             infos[j].class = (Number(j) % 2) + 1;
+                            infos[j].room = rows[j].id;
                             if (!infos[j].profil_pic) {
                                 infos[j].profil_pic = 'img/no-pictures.png';
                             }
@@ -903,7 +916,7 @@ app.get("/message.html", function (req, res) {
                             }
                         })
                     })(j, function () {
-                        res.render("message.html", {
+                        res.render("contact.html", {
                             message: {
                                 infos: infos
                             }
@@ -911,7 +924,7 @@ app.get("/message.html", function (req, res) {
                     });
                 }
             } else {
-                res.render("message.html", {});
+                res.render("contact.html", {});
             }
         })
     }
@@ -927,14 +940,19 @@ app.get("/message.html/:user", function (req, res) {
             if (err) throw err;
             for (var k in rows) {
                 (function (k) {
-                    if (rows[k].matcher !== req.session.user) infos_tmp[k] = rows[k].matcher;
-                    else if (rows[k].matched !== req.session.user) infos_tmp[k] = rows[k].matched;
+                    if (rows[k].matcher !== req.session.user) {
+                        infos_tmp[k] = rows[k].matcher
+                    } else if (rows[k].matched !== req.session.user) {
+                        infos_tmp[k] = rows[k].matched;
+                    }
                 })(k);
             }
             for (var j in infos_tmp) {
                 (function (j, callback) {
-                    connection.query("SELECT * FROM users WHERE username = ?", [infos_tmp[j]], function (err, data) {
+                    connection.query("SELECT * FROM users WHERE username = ?", [infos_tmp[j].name], function (err, data) {
                         infos[j] = data[0];
+                        console.log(rows[j].id);
+                        // infos[j].room = rows[j].id;
                         if (!infos[j].profil_pic) {
                             infos[j].profil_pic = 'img/no-pictures.png';
                         }
@@ -1745,6 +1763,25 @@ app.post('/blocker/:user', function (req, res) {
     }
 })
 
+app.post('/sendmessage/:room', function (req, res) {
+    connection.query("SELECT * FROM matchs WHERE id = ?", [req.params.room], function (err, room) {
+        if (err) throw err;
+        else {
+            if (room[0].matcher === req.session.user) {
+                var reciever = room[0].matched;
+            } else {
+                var reciever = room[0].matcher;
+            }
+            connection.query("INSERT INTO messages(sender, reciever, message, room) VALUES(?,?,?,?)", [req.session.user, reciever, req.body.messagetosend, req.params.room], function (err) {
+                if (err) throw err;
+                else {
+                    res.redirect('/message.html/' + req.params.room)
+                }
+            })
+        }
+    })
+})
+
 
 app.get('*', function (req, res) {
     if (!req.session.user) {
@@ -1793,6 +1830,23 @@ io.on('connection', function (socket) {
             }
         }
     })
+    socket.on('check_message', function (url) {
+        var data = [];
+        connection.query("SELECT * FROM messages WHERE room = ?", [url], function (err, rows) {
+            if (err) throw err;
+            (function (callback) {
+                for (i = 0; i < rows.length; i++) {
+                    data.push(rows[i]);
+                }
+                callback(data);
+            })(function (data) {
+                socket.emit('new_message', data);
+            })
+
+        })
+
+
+    });
     publicIp.v4().then(function (ip) {
         var location = geoip.lookup(ip).ll
         socket.emit("iplocation", {

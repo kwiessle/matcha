@@ -1,0 +1,42 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Matcha | Message</title>
+    <link href="/stylesheets/main.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+    <link href="/stylesheets/message.css" rel="stylesheet">
+    <script src="/js/typeahead.min.js"></script>
+    <script src="/js/search.js"></script>
+</head>
+
+<body>
+    <div class="menu">
+        <form method="post" action="/search" class="search-form">
+            <input id="search-bar" type="text" name="search" placeholder="Search ..." class="typeahead tt-query" spellcheck="false" autocomplete="on" name="typeahead">
+            <input id="go" type="submit" name="search" value="Go!">
+        </form>
+        <a href="match.html"> <img id="menu-logo" src="img/mini-logo.png" alt="mini-logo"></a>
+        <a href="/feed.html"><img class="menu-img" src="/img/feed.png"></a>
+        <a href="profile.html"><img class="menu-img" src="/img/account.png"></a>
+        <a href="message.html"><img class="menu-img" src="/img/envelope.png"></a>
+        <a href="logout.html"><img class="menu-img" src="/img/logout.png"></a>
+    </div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="separator"></div>
+    <div class="site-content" align="center">
+        <div class="side-bar">
+            <div class="onglet">Inbox</div> {{#message.infos}}
+            <div class="contact a{{class}}" onClick="document.location.href='/message.html/{{room}}'">
+                <img src="/{{profil_pic}}">
+                <div class="contact-info">{{firstname}} {{lastname}}</div>
+                <div class="contact-notification">2</div>
+            </div>{{/message.infos}}
+        </div>
+    </div>
+    <script src="/js/chat.js"></script>
+</body>
+
+</html>
