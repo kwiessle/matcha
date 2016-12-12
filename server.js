@@ -95,7 +95,7 @@ connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`tags` ( `tag` VARCHAR(255
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`matchs` ( `matcher` VARCHAR(255) NOT NULL , `matched` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`block` ( `block_by` VARCHAR(255) NOT NULL , `blocked` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`UserComment` ( `UserId` INT(5) NOT NULL , UserName VARCHAR(255) NOT NULL , `Comment` VARCHAR(255) NOT NULL) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`notification` (`id` INT(5) NOT NULL AUTO_INCREMENT, `sender` VARCHAR(255) NOT NULL , `sended` VARCHAR(255) NOT NULL, `content` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`notification` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `sender` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , `reciever` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , `context` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`dictionary` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `value` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `score` INT(5) NOT NULL DEFAULT '0' , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("use matcha");
 
@@ -398,6 +398,9 @@ app.get('/user.html/:user', function (req, res) {
         } else {
             connection.query("SELECT * FROM history WHERE visitor = ? AND visited = ?", [req.session.user, req.params.user], function (err, rows) {
                 if (err) throw err;
+                connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.params.user, req.session.user, 'visit'], function (err) {
+                    if (err) throw err;
+                })
                 if (!rows[0]) {
                     connection.query("UPDATE users SET pop = pop + 2 WHERE username = ?", [req.params.user], function (err) {
                         if (err) throw err;
@@ -952,7 +955,6 @@ app.get("/message.html/:user", function (req, res) {
         })
     }
 })
-
 
 
 
@@ -1646,10 +1648,19 @@ app.post('/liker/:user', function (req, res) {
                             connection.query("INSERT INTO liking(liker, liked) VALUES(?, ?)", [req.session.user, req.params.user], function (err) {
                                 if (err) throw err;
                                 else {
+                                    connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.params.user, req.session.user, 'like'], function (err) {
+                                        if (err) throw err;
+                                    })
                                     connection.query("SELECT * from liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
                                         if (rows.length) {
                                             connection.query("INSERT INTO matchs(matcher, matched) VALUES(?,?)", [req.session.user, req.params.user], function (err) {
                                                 if (err) throw err;
+                                                connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.params.user, req.session.user, 'match'], function (err) {
+                                                    if (err) throw err;
+                                                    connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.session.user, req.params.user, 'match'], function (err) {
+                                                        if (err) throw err;
+                                                    })
+                                                })
                                             })
                                         }
                                     })
@@ -1672,6 +1683,9 @@ app.post('/liker/:user', function (req, res) {
                     })
                     connection.query("DELETE FROM matchs WHERE matcher = ? AND matched = ?", [req.params.user, req.session.user], function (err) {
                         if (err) throw err;
+                        connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.params.user, req.session.user, 'unlike'], function (err) {
+                            if (err) throw err;
+                        })
                     })
                     res.redirect('/user.html/' + req.params.user)
                 }
