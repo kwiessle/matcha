@@ -16,8 +16,8 @@ var options = {
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    //port: 8889,
-    port: 3307,
+    port: 8889,
+    //port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -139,7 +139,10 @@ app.get('/', function (req, res) {
     });
 })*/
 
-
+app.get('/whoami', function (req, res) {
+    console.log("zdp");
+    res.end(req.session.user);
+})
 
 app.get('/hashtags.html', function (req, res) {
     if (req.session.user) {
@@ -949,10 +952,9 @@ app.get("/message.html/:user", function (req, res) {
             }
             for (var j in infos_tmp) {
                 (function (j, callback) {
-                    connection.query("SELECT * FROM users WHERE username = ?", [infos_tmp[j].name], function (err, data) {
+                    connection.query("SELECT * FROM users WHERE username = ?", [infos_tmp[j]], function (err, data) {
                         infos[j] = data[0];
-                        console.log(rows[j].id);
-                        // infos[j].room = rows[j].id;
+                        infos[j].room = rows[j].id;
                         if (!infos[j].profil_pic) {
                             infos[j].profil_pic = 'img/no-pictures.png';
                         }
@@ -966,7 +968,8 @@ app.get("/message.html/:user", function (req, res) {
                         chatwithme: req.params.user,
                         message: {
                             infos: infos
-                        }
+                        },
+                        baiserie: '<div id="sessionUser" style="font-size: 0px;">' + req.session.user + '</div>'
                     })
                 });
             }
@@ -1764,22 +1767,26 @@ app.post('/blocker/:user', function (req, res) {
 })
 
 app.post('/sendmessage/:room', function (req, res) {
-    connection.query("SELECT * FROM matchs WHERE id = ?", [req.params.room], function (err, room) {
-        if (err) throw err;
-        else {
-            if (room[0].matcher === req.session.user) {
-                var reciever = room[0].matched;
-            } else {
-                var reciever = room[0].matcher;
-            }
-            connection.query("INSERT INTO messages(sender, reciever, message, room) VALUES(?,?,?,?)", [req.session.user, reciever, req.body.messagetosend, req.params.room], function (err) {
-                if (err) throw err;
-                else {
-                    res.redirect('/message.html/' + req.params.room)
+    if (req.body.messagetosend) {
+        connection.query("SELECT * FROM matchs WHERE id = ?", [req.params.room], function (err, room) {
+            if (err) throw err;
+            else {
+                if (room[0].matcher === req.session.user) {
+                    var reciever = room[0].matched;
+                } else {
+                    var reciever = room[0].matcher;
                 }
-            })
-        }
-    })
+                connection.query("INSERT INTO messages(sender, reciever, message, room) VALUES(?,?,?,?)", [req.session.user, reciever, req.body.messagetosend, req.params.room], function (err) {
+                    if (err) throw err;
+                    else {
+                        res.redirect('/message.html/' + req.params.room)
+                    }
+                })
+            }
+        })
+    } else {
+        res.redirect(req.get('referer'));
+    }
 })
 
 
@@ -1830,8 +1837,23 @@ io.on('connection', function (socket) {
             }
         }
     })
+    socket.on('infos-chat-request', function (package) {
+
+        connection.query("SELECT * FROM messages WHERE room = ?", [package[0]], function (err, rows) {
+            if (err) throw err;
+            else {
+                console.log(rows);
+                if (rows[0].reciever === package[1]) {
+                    socket.emit('info-chat', rows[0].sender);
+                } else {
+                    socket.emit('info.chat', rows[0].reciever);
+                }
+            }
+        })
+    });
     socket.on('check_message', function (url) {
         var data = [];
+        console.log(url);
         connection.query("SELECT * FROM messages WHERE room = ?", [url], function (err, rows) {
             if (err) throw err;
             (function (callback) {

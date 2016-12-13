@@ -37,21 +37,20 @@
             </div>{{/message.infos}}
         </div>
         <div class="message" align="center">
-            <div class="onglet-2">
-                {{#chatwithme}}Chat with {{chatwithme}}{{/chatwithme}}{{^chatwithme}}Select a discussion{{/chatwithme}}
+            <div class="guest">
+                Chat with {{username}}
             </div>
             <div id="msgtpl">
-                <p> <strong>{{user.username}}</strong> </p>
-                <p> {{message}} </p> <span>{{h}}:{{m}}</span>
             </div>
             <div>
-                <form method="post" action="/sendmessage/{{room}}" id="form" class="message-area">
+                <form method="post" action="/sendmessage/{{infos.room}}" id="form" class="message-area">
                     <textarea type="text" id="message" class="text" name="messagetosend"></textarea>
                     <input type="submit" name="send" id="send" value="Send" class="submit" />
                 </form>
             </div>
         </div>
     </div>
+    {{{baiserie}}}
     <script src="/js/chat.js"></script>
 </body>
 
