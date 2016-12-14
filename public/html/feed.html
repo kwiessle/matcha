@@ -22,10 +22,13 @@
         <form method="get" action="/search" class="search-form">
             <input id="search-bar" type="text" name="search" placeholder="Search ..." class="typeahead tt-query" spellcheck="false" autocomplete="on" name="typeahead">
             <input id="go" type="submit" name="search" value="Go!"> </form>
-        <a href="/match.html"> <img id="menu-logo" src="/img/mini-logo.png" alt="mini-logo"></a>
-        <a href="#"><img class="menu-img" src="/img/feed.png"></a>
-        <a id="account" href="/profile.html"><img class="menu-img" src="/img/account.png"></a>
-        <a href="/message.html"><img class="menu-img" src="/img/envelope.png"></a>
+        <img id="menu-logo" src="/img/mini-logo.png" alt="mini-logo">
+        <a href="/notification.html">
+            <div id="notification"></div>
+        </a>
+        <a href="/feed.html"><img class="menu-img" src="/img/feed.png"></a>
+        <a href="/profile.html"><img class="menu-img" src="/img/account.png"></a>
+         <a href="/contact.html"><img class="menu-img" src="/img/envelope.png"></a>
         <a href="/logout.html"><img class="menu-img" src="/img/logout.png"></a>
     </div>
     <div class="separator"></div>
@@ -116,6 +119,7 @@
         });
 
     </script>
+    <script src="/js/notification.js"></script>
 </body>
 
 </html>

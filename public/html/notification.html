@@ -3,17 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Matcha | Match</title>
-    <link href="stylesheets/main.css" rel="stylesheet">
-    <link href="stylesheets/match.css" rel="stylesheet">
+    <title>Matcha | Profile</title>
+    <link href="/stylesheets/main.css" rel="stylesheet">
+    <link href="/stylesheets/match.css" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
     <script src="https://localhost:4433/socket.io/socket.io.js"></script>
     <script src="/js/typeahead.min.js"></script>
     <script src="/js/search.js"></script>
-    <style>
-
-
-    </style>
+    <script src="/js/load.js"></script>
 </head>
 
 <body>
@@ -35,10 +32,8 @@
     <div class="separator"></div>
     <div class="separator"></div>
     <div class="site-content" align="center">
-        <div id="match" class="hud" align="left">
-            {{>blockpage}} {{message}}
-        </div>
-    </div>
+        <div id="match" class="hud" align="left"> {{>display_notifications}} </div>
+        <h1>{{message}}</h1> </div>
     <div class="separator"></div>
     <div class="separator"></div>
     <div class="separator"></div>

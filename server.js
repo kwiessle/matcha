@@ -87,7 +87,7 @@ connection.connect(function (err) {
 });
 connection.query("CREATE DATABASE IF NOT EXISTS matcha CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin;");
 //connection.query("matcha < matcha.sql");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`users` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `firstname` VARCHAR(255) NOT NULL , `lastname` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `birthday` DATE NOT NULL , `email` VARCHAR(255) NOT NULL , `password` VARCHAR(255) NOT NULL , `sexe` VARCHAR(8) NOT NULL , `token` VARCHAR(255) NOT NULL , `validation` VARCHAR(1) NOT NULL DEFAULT '0' ,  `profil_pic` LONGTEXT DEFAULT NULL, `sexual_or` VARCHAR(10) NOT NULL DEFAULT 'bi' , `bio` VARCHAR(255) DEFAULT NULL , `location` VARCHAR(255) DEFAULT NULL, `currlat` DECIMAL(11, 8) DEFAULT NULL, `currlong` DECIMAL( 11, 8 ) DEFAULT NULL, `pop` INT(5) DEFAULT '0', login VARCHAR(255), `sessionID` VARCHAR(255) DEFAULT NULL, `socket.id` VARCHAR(255) DEFAULT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4  COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`users` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `firstname` VARCHAR(255) NOT NULL , `lastname` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `birthday` DATE NOT NULL , `email` VARCHAR(255) NOT NULL , `password` VARCHAR(255) NOT NULL , `sexe` VARCHAR(8) NOT NULL , `token` VARCHAR(255) NOT NULL , `validation` VARCHAR(1) NOT NULL DEFAULT '0' ,  `profil_pic` LONGTEXT DEFAULT NULL, `sexual_or` VARCHAR(10) NOT NULL DEFAULT 'bi' , `bio` VARCHAR(255) DEFAULT NULL , `location` VARCHAR(255) DEFAULT NULL, `currlat` DECIMAL(11, 8) DEFAULT NULL, `currlong` DECIMAL( 11, 8 ) DEFAULT NULL, `pop` INT(5) DEFAULT '0', login VARCHAR(255), `sessionID` VARCHAR(255) DEFAULT NULL, `socket_id` VARCHAR(255) DEFAULT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4  COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`pictures` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `pic` LONGTEXT NOT NULL , `username` VARCHAR(255) NOT NULL,  PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`history` ( `visitor` VARCHAR(255) NOT NULL , `visited` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`liking` ( `liker` VARCHAR(255) NOT NULL , `liked` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
@@ -95,9 +95,9 @@ connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`reports` ( `reporter` VAR
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`tags` ( `tag` VARCHAR(255) NOT NULL , `username` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`matchs` ( `matcher` VARCHAR(255) NOT NULL , `matched` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`block` ( `block_by` VARCHAR(255) NOT NULL , `blocked` VARCHAR(255) NOT NULL , `id` INT(5) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`notification` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `sender` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , `reciever` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , `context` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`notification` (`id` INT(5) NOT NULL AUTO_INCREMENT, `sender` VARCHAR(255) NOT NULL , `sended` VARCHAR(255) NOT NULL, `content` VARCHAR(255) NOT NULL, `date` VARCHAR(255) NOT NULL,`seen` INT(1) NOT NULL DEFAULT '0', PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`dictionary` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `value` VARCHAR(255) NOT NULL , `score` INT(5) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB  CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
-connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`messages` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `sender` VARCHAR(255) DEFAULT NULL , `reciever` VARCHAR(255) DEFAULT NULL , `message` TEXT DEFAULT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
+connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`messages` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `sender` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `reciever` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `message` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `room` INT(5) NULL DEFAULT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection = mysql.createPool({
     connectionLimit: 100,
     port: 3307,
@@ -131,9 +131,19 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.get('/', function (req, res) {
-    res.render('index.html', {
-        message: 'Welcome to Matcha'
+    connection.query("SELECT * FROM users WHERE sessionID = ?", [req.sessionID], function (errr, rows) {
+        if (errr) throw errr;
+        else {
+            if (rows[0]) {
+                res.redirect('/profile.html')
+            } else {
+                res.render('index.html', {
+                    message: 'Welcome to Matcha'
+                })
+            }
+        }
     })
+
 });
 
 
@@ -408,24 +418,49 @@ app.get('/updates', function (req, res) {
     res.redirect('/edit_profil.html');
 })
 
+app.get("/notification.html", function (req, res) {
+    if (!req.session.user) {
+        res.redirect("/");
+    } else {
+        connection.query("SELECT * FROM notification WHERE sended = ? ORDER by id DESC", [req.session.user], function (err, rows) {
+            if (err) throw err;
+            for (var k in rows) {
+                rows[k].class = (Number(rows[k].seen) % 2) + 1;
+            }
+            res.render("notification.html", {
+                notification: {
+                    infos: rows
+                }
+            })
+        })
+    }
+});
+
 app.get('/user.html/:user', function (req, res) {
+    var infos = [];
     if (!req.session.user) {
         res.redirect('/');
-    }
-    if (!req.session.profil_pic) {
-        res.redirect('/error.html')
     } else {
         if (req.params.user === req.session.user) {
             res.redirect('/profile.html');
         } else {
+            connection.query("SELECT * FROM block WHERE block_by = ? AND blocked = ?", [req.params.user, req.session.user], function (err, blocked) {
+                if (err) throw err;
+                if (!blocked[0]) {
+                    var content = req.session.firstname + " " + req.session.lastname + " visited your profil";
+                    var date = new Date().toISOString().slice(0, 10);
+                    var date = date + " " + new Date().getHours() + " : " + new Date().getMinutes();
+                    connection.query("INSERT INTO notification(sender,sended,content, date) VALUES(?,?,?, ?)", [req.session.user, req.params.user, content, date], function (err) {
+                        if (err) throw err;
+                    })
+                }
+            })
             connection.query("SELECT * FROM history WHERE visitor = ? AND visited = ?", [req.session.user, req.params.user], function (err, rows) {
                 if (err) throw err;
-                connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.params.user, req.session.user, 'visit'], function (err) {
-                    if (err) throw err;
-                })
                 if (!rows[0]) {
                     connection.query("UPDATE users SET pop = pop + 2 WHERE username = ?", [req.params.user], function (err) {
                         if (err) throw err;
+                        infos.pop = infos.pop + 2;
                     });
                     connection.query("INSERT INTO history(visitor, visited) VALUES (?,?)", [req.session.user, req.params.user], function (err) {
                         if (err) throw err;
@@ -437,104 +472,47 @@ app.get('/user.html/:user', function (req, res) {
                 if (!rows.length) {
                     res.redirect('/feed.html');
                 } else {
-                    var infos = rows[0];
+                    infos = rows[0];
                     infos.birth = profile.age(rows[0].birthday);
                     connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.session.user, req.params.user], function (err, data) {
                         if (err) throw err;
-                        connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.session.user, req.params.user], function (err, match) {
+                        connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, liker) {
                             if (err) throw err;
-                            if (match.length) {
+                            connection.query("SELECT * FROM matchs WHERE (matcher = ? AND matched = ?) OR (matcher = ? AND matched = ?)", [req.session.user, req.params.user, req.params.user, req.session.user], function (err, match) {
                                 connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.params.user, rows[0].profil_pic], function (err, row) {
                                     if (err) throw err;
-                                    for (var k in row) {
-                                        row[k].pic = row[k].pic.replace("uploads/", "");
-                                    }
-                                    if (!infos.profil_pic) {
-                                        infos.profil_pic = 'img/no-pictures.png';
-                                    }
-                                    connection.query("SELECT * FROM tags WHERE username = ?", [req.params.user], function (err, tags) {
+                                    connection.query("SELECT tag FROM tags WHERE username =?", [req.params.user], function (err, tags) {
                                         if (err) throw err;
-                                        connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
-                                            if (err) throw err;
-                                            var relation = '';
-                                            if (rows.length) {
-                                                relation = req.params.user + ' you follow';
+                                        if (data[0]) {
+                                            infos.follow = "you like " + rows[0].firstname;
+                                        }
+                                        if (liker[0]) {
+                                            infos.follow = rows[0].firstname + " likes your profil";
+                                        }
+                                        if (match[0]) {
+                                            infos.follow = "you match with " + rows[0].firstname;
+                                        }
+                                        res.render('user.html', {
+                                            users: {
+                                                infos: infos
+                                            },
+                                            display_pictures_users: {
+                                                infos: row
+                                            },
+                                            display_public_tags: {
+                                                infos: tags
                                             }
-                                            res.render('user.html', {
-                                                firstname: infos.firstname,
-                                                lastname: infos.lastname,
-                                                location: infos.location,
-                                                profil_pic: infos.profil_pic,
-                                                birthday: infos.birth + ' ans ',
-                                                liker: infos.username,
-                                                liker_class1: 'dontShow',
-                                                relation: relation,
-                                                status: infos.login,
-                                                pop: infos.pop,
-                                                bio: infos.bio,
-                                                display_pictures_users: {
-                                                    infos: row
-                                                },
-                                                display_public_tags: {
-                                                    value: tags
-                                                }
-                                            });
-                                        })
+                                        });
                                     })
                                 });
-                            } else {
-                                connection.query("SELECT * FROM pictures WHERE username = ? AND pic != ?", [req.params.user, rows[0].profil_pic], function (err, row) {
-                                    if (err) throw err;
-                                    if (data[0]) {
-                                        infos.follow = "you like " + rows[0].firstname;
-                                    }
-                                    if (match[0]) {
-                                        infos.follow = "you match with " + rows[0].firstname;
-                                    }
-                                    for (var k in row) {
-                                        row[k].pic = row[k].pic.replace("uploads/", "");
-                                    }
-                                    if (!infos.profil_pic) {
-                                        infos.profil_pic = 'img/no-pictures.png';
-                                    }
-                                    connection.query("SELECT * FROM tags WHERE username = ?", [req.params.user], function (err, tags) {
-                                        if (err) throw err;
-                                        connection.query("SELECT * FROM liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
-                                            if (err) throw err;
-                                            var relation = '';
-                                            if (rows.length) {
-                                                relation = req.params.user + ' you follow';
-                                            }
-                                            res.render('user.html', {
-                                                firstname: infos.firstname,
-                                                lastname: infos.lastname,
-                                                location: infos.location,
-                                                profil_pic: infos.profil_pic,
-                                                birthday: infos.birth + ' ans ',
-                                                liker: infos.username,
-                                                liker_class2: 'dontShow',
-                                                relation: relation,
-                                                status: infos.login,
-                                                pop: infos.pop,
-                                                bio: infos.bio,
-                                                display_pictures_users: {
-                                                    infos: row
-                                                },
-                                                display_public_tags: {
-                                                    value: tags
-                                                }
-                                            });
-                                        })
-                                    })
-                                });
-                            }
+                            });
                         });
                     });
                 }
             });
         }
     }
-})
+});
 
 
 
@@ -916,14 +894,23 @@ app.get('/contact.html', function (req, res) {
                 for (var j in infos_tmp) {
                     (function (j, callback) {
                         connection.query("SELECT * FROM users WHERE username = ?", [infos_tmp[j]], function (err, data) {
-                            infos[j] = data[0];
-                            infos[j].class = (Number(j) % 2) + 1;
-                            infos[j].room = rows[j].id;
-                            if (!infos[j].profil_pic) {
-                                infos[j].profil_pic = 'img/no-pictures.png';
-                            }
-                            if (!infos_tmp[Number(j) + 1]) {
-                                callback();
+                            if (err) throw err;
+                            else {
+                                connection.query("SELECT COUNT(*) as nbr_notif FROM notification WHERE sender = ? AND sended = ?and RIGHT(content, 7) = 'message'", [infos_tmp[j].name, req.session.user], function (err, notif) {
+                                    if (err) throw err;
+                                    else {
+                                        infos[j] = data[0];
+                                        infos[j].room = rows[j].id;
+                                        infos[j].notification = notif[0].nbr_notif;
+                                        if (!infos[j].profil_pic) {
+                                            infos[j].profil_pic = 'img/no-pictures.png';
+                                        }
+                                        infos[j].class = (Number(j) % 2) + 1;
+                                        if (!infos_tmp[Number(j) + 1]) {
+                                            callback();
+                                        }
+                                    }
+                                })
                             }
                         })
                     })(j, function () {
@@ -961,14 +948,23 @@ app.get("/message.html/:user", function (req, res) {
             for (var j in infos_tmp) {
                 (function (j, callback) {
                     connection.query("SELECT * FROM users WHERE username = ?", [infos_tmp[j]], function (err, data) {
-                        infos[j] = data[0];
-                        infos[j].room = rows[j].id;
-                        if (!infos[j].profil_pic) {
-                            infos[j].profil_pic = 'img/no-pictures.png';
-                        }
-                        infos[j].class = (Number(j) % 2) + 1;
-                        if (!infos_tmp[Number(j) + 1]) {
-                            callback();
+                        if (err) throw err;
+                        else {
+                            connection.query("SELECT COUNT(*) as nbr_notif FROM notification WHERE sender = ? AND sended = ?and RIGHT(content, 7) = 'message'", [infos_tmp[j].name, req.session.user], function (err, notif) {
+                                if (err) throw err;
+                                else {
+                                    infos[j] = data[0];
+                                    infos[j].room = rows[j].id;
+                                    infos[j].notification = notif[0].nbr_notif;
+                                    if (!infos[j].profil_pic) {
+                                        infos[j].profil_pic = 'img/no-pictures.png';
+                                    }
+                                    infos[j].class = (Number(j) % 2) + 1;
+                                    if (!infos_tmp[Number(j) + 1]) {
+                                        callback();
+                                    }
+                                }
+                            })
                         }
                     })
                 })(j, function () {
@@ -1280,32 +1276,53 @@ app.get('/search', function (req, res) {
 app.post('/', function (req, res) {
     var username = req.body.username;
     var password = md5(req.body.password);
-    connection.query("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], function (err, rows) {
+    connection.query("SELECT * FROM users WHERE sessionID = ?", [req.sessionID], function (err, row) {
         if (err) throw err;
-        if (rows.length == 1) {
-            req.session.firstname = rows[0].firstname;
-            req.session.lastname = rows[0].lastname;
-            req.session.user = rows[0].username;
-            req.session.birthday = rows[0].birthday;
-            req.session.email = rows[0].email;
-            req.session.location = rows[0].location;
-            req.session.sexe = rows[0].sexe;
-            req.session.token = rows[0].token;
-            req.session.bio = rows[0].bio;
-            req.session.profil_pic = rows[0].profil_pic;
-            req.session.sexual_or = rows[0].sexual_or;
-            req.session.pop = rows[0].pop;
+        if (row[0]) {
+            console.log('zdp')
+            req.session.firstname = row[0].firstname;
+            req.session.lastname = row[0].lastname;
+            req.session.user = row[0].username;
+            req.session.birthday = row[0].birthday;
+            req.session.email = row[0].email;
+            req.session.location = row[0].location;
+            req.session.sexe = row[0].sexe;
+            req.session.token = row[0].token;
+            req.session.bio = row[0].bio;
+            req.session.profil_pic = row[0].profil_pic;
+            req.session.sexual_or = row[0].sexual_or;
+            req.session.pop = row[0].pop;
             req.session.priority = 0;
-            connection.query("UPDATE users SET login = ?, sessionID = ? WHERE username = ?", ["online", req.sessionID, req.session.user])
-            res.redirect('profile.html');
+            res.redirect('/profile.html')
         } else {
-            res.render('index.html', {
-                message: 'Unknown account or invalid password'
+            connection.query("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], function (err, rows) {
+                if (err) throw err;
+                if (rows.length == 1) {
+                    console.log('normul')
+                    req.session.firstname = rows[0].firstname;
+                    req.session.lastname = rows[0].lastname;
+                    req.session.user = rows[0].username;
+                    req.session.birthday = rows[0].birthday;
+                    req.session.email = rows[0].email;
+                    req.session.location = rows[0].location;
+                    req.session.sexe = rows[0].sexe;
+                    req.session.token = rows[0].token;
+                    req.session.bio = rows[0].bio;
+                    req.session.profil_pic = rows[0].profil_pic;
+                    req.session.sexual_or = rows[0].sexual_or;
+                    req.session.pop = rows[0].pop;
+                    req.session.priority = 0;
+                    connection.query("UPDATE users SET login = ?, sessionID = ? WHERE username = ?", ["online", req.sessionID, req.session.user])
+                    res.redirect('/profile.html');
+                } else {
+                    res.render('index.html', {
+                        message: 'Unknown account or invalid password'
+                    })
+                }
             })
         }
     })
 })
-
 
 
 app.post('/create_account.html', function (req, res) {
@@ -1678,17 +1695,39 @@ app.post('/liker/:user', function (req, res) {
                             connection.query("INSERT INTO liking(liker, liked) VALUES(?, ?)", [req.session.user, req.params.user], function (err) {
                                 if (err) throw err;
                                 else {
-                                    connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.params.user, req.session.user, 'like'], function (err) {
+                                    connection.query("SELECT * FROM block WHERE block_by = ? AND blocked = ?", [req.params.user, req.session.user], function (err, blocked) {
                                         if (err) throw err;
+                                        if (!blocked[0]) {
+                                            var content = req.session.firstname + " " + req.session.lastname + " Liked your profil";
+                                            var date = new Date().toISOString().slice(0, 10);
+                                            var date = date + " " + new Date().getHours() + " : " + new Date().getMinutes();
+                                            connection.query("INSERT INTO notification(sender,sended,content, date) VALUES(?,?,?, ?)", [req.session.user, req.params.user, content, date], function (err) {
+                                                if (err) throw err;
+                                            })
+                                        }
                                     })
                                     connection.query("SELECT * from liking WHERE liker = ? AND liked = ?", [req.params.user, req.session.user], function (err, rows) {
                                         if (rows.length) {
                                             connection.query("INSERT INTO matchs(matcher, matched) VALUES(?,?)", [req.session.user, req.params.user], function (err) {
                                                 if (err) throw err;
-                                                connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.params.user, req.session.user, 'match'], function (err) {
+                                                connection.query("SELECT * FROM block WHERE block_by = ? AND blocked = ?", [req.params.user, req.session.user], function (err, blocked) {
                                                     if (err) throw err;
-                                                    connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.session.user, req.params.user, 'match'], function (err) {
-                                                        if (err) throw err;
+                                                    if (!blocked[0]) {
+                                                        var content = req.session.firstname + " " + req.session.lastname + " matched your profil";
+                                                        var date = new Date().toISOString().slice(0, 10);
+                                                        var date = date + " " + new Date().getHours() + " : " + new Date().getMinutes();
+                                                        connection.query("INSERT INTO notification(sender,sended,content, date) VALUES(?,?,?, ?)", [req.session.user, req.params.user, content, date], function (err) {
+                                                            if (err) throw err;
+
+                                                        })
+                                                    }
+                                                    connection.query("SELECT firstname, lastname FROM users WHERE username = ?", [req.params.user], function (err, infos) {
+                                                        var content = infos[0].firstname + " " + infos[0].lastname + " matched your profil";
+                                                        var date = new Date().toISOString().slice(0, 10);
+                                                        var date = date + " " + new Date().getHours() + " : " + new Date().getMinutes();
+                                                        connection.query("INSERT INTO notification(sender,sended,content, date) VALUES(?,?,?, ?)", [req.params.user, req.session.user, content, date], function (err) {
+                                                            if (err) throw err;
+                                                        })
                                                     })
                                                 })
                                             })
@@ -1713,8 +1752,17 @@ app.post('/liker/:user', function (req, res) {
                     })
                     connection.query("DELETE FROM matchs WHERE matcher = ? AND matched = ?", [req.params.user, req.session.user], function (err) {
                         if (err) throw err;
-                        connection.query('INSERT INTO notification(sender, reciever, context) VALUES(?,?,?)', [req.params.user, req.session.user, 'unlike'], function (err) {
+                        connection.query("SELECT * FROM block WHERE block_by = ? AND blocked = ?", [req.params.user, req.session.user], function (err, blocked) {
                             if (err) throw err;
+                            if (!blocked[0]) {
+                                var content = req.session.firstname + " " + req.session.lastname + " unfollow your profil";
+                                var date = new Date().toISOString().slice(0, 10);
+                                var date = date + " " + new Date().getHours() + " : " + new Date().getMinutes();
+                                connection.query("INSERT INTO notification(sender,sended,content, date) VALUES(?,?,?, ?)", [req.session.user, req.params.user, content, date], function (err) {
+                                    if (err) throw err;
+
+                                })
+                            }
                         })
                     })
                     res.redirect('/user.html/' + req.params.user)
@@ -1752,6 +1800,7 @@ app.post('/blocker/:user', function (req, res) {
             })
         }
         if (req.body.pov === 'Report') {
+            console.log('rport bgin');
             connection.query("SELECT username FROM users WHERE username = ?", [req.params.user], function (err, rows) {
                 if (err) throw err;
                 if (rows.length) {
@@ -1760,6 +1809,7 @@ app.post('/blocker/:user', function (req, res) {
                             connection.query("INSERT INTO reports(reporter, reported) VALUES(?,?)", [req.session.user, req.params.user], function (err) {
                                 if (err) throw err;
                                 else {
+                                    console.log('rport end');
                                     res.redirect('/user.html/' + req.params.user)
                                 }
                             })
@@ -1828,6 +1878,47 @@ var io = require('socket.io').listen(httpsServer.listen(4433));
 io.on('connection', function (socket) {
     var cookies = cookieParser.signedCookies(cookie.parse(socket.handshake.headers.cookie), sess.secret);
     var sessionid = cookies['connect.sid'];
+    connection.query("UPDATE users SET socket_id= ? WHERE sessionID = ?", [socket.id, sessionid], function (err) {
+        if (err) throw err;
+    });
+    connection.query("SELECT COUNT(*) AS notification FROM notification WHERE sended = (SELECT username FROM users WHERE sessionID = ?) AND seen = 0", [sessionid], function (err, rows) {
+        if (err) throw err;
+        if (rows[0]) {
+            socket.emit("notification", {
+                notification: rows[0].notification
+            });
+        }
+    });
+    socket.on("new visitor", function (data) {
+        connection.query("SELECT socket_id FROM users WHERE username = ? ", [data.user], function (err, rows) {
+            if (Object.keys(io.sockets.sockets).includes(rows[0].socket_id)) {
+                (function (callback) {
+                    connection.query("SELECT COUNT(*) AS notification FROM notification WHERE sended = ? and seen = 0", [data.user], function (err, number) {
+                        callback(number);
+                    });
+                })(function (number) {
+                    io.sockets.in(rows[0].socket_id).emit("new Notification", {
+                        value: number[0].notification
+                    });
+                })
+            }
+        });
+    });
+    socket.on("likeEvent", function (data) {
+        connection.query("SELECT socket_id FROM users WHERE username = ? ", [data.user], function (err, rows) {
+            if (Object.keys(io.sockets.sockets).includes(rows[0].socket_id)) {
+                (function (callback) {
+                    connection.query("SELECT COUNT(*) AS notification FROM notification WHERE sended = ? AND seen = 0", [data.user], function (err, number) {
+                        callback(number);
+                    });
+                })(function (number) {
+                    io.sockets.in(rows[0].socket_id).emit("new Notification", {
+                        value: number[0].notification
+                    });
+                })
+            }
+        });
+    });
     socket.on("location", function (data) {
         if (data) {
             var location = data.location;
@@ -1883,12 +1974,85 @@ io.on('connection', function (socket) {
                 }
                 callback(data);
             })(function (data) {
-                socket.emit('new_message', data);
+                socket.emit('old_message', data);
             })
-
         })
-
-
+    });
+    socket.on("send-message", function (data) {
+        console.log(data);
+        if (data.room) {
+            connection.query("SELECT * FROM matchs WHERE id = ?", [data.room], function (err, room) {
+                if (err) throw err;
+                if (room[0]) {
+                    if (room[0].matcher === data.user) {
+                        var reciever = room[0].matched;
+                    } else {
+                        var reciever = room[0].matcher;
+                    }
+                    (function (callback) {
+                        connection.query("INSERT INTO messages(sender, reciever, message, room) VALUES(?,?,?,?)", [data.user, reciever, data.text, data.room], function (err) {
+                            if (err) throw err;
+                            connection.query("SELECT firstname,lastname FROM users WHERE username = ?", [data.user], function (err, rows) {
+                                if (err) throw err;
+                                var content = rows[0].firstname + " " + rows[0].lastname + " send you a new message";
+                                var date = new Date().toISOString().slice(0, 10);
+                                var date = date + " " + new Date().getHours() + " : " + new Date().getMinutes();
+                                connection.query("INSERT INTO notification(sender, sended, content, date) VALUES( ? , ? , ? , ? )", [data.user, reciever, content, date], function (err) {
+                                    if (err) throw err;
+                                    callback();
+                                })
+                            })
+                        })
+                    })(function () {
+                        connection.query("SELECT socket_id FROM users WHERE username = ? ", [reciever], function (err, rows) {
+                            if (Object.keys(io.sockets.sockets).includes(rows[0].socket_id)) {
+                                io.sockets.in(rows[0].socket_id).emit("new_message", {
+                                    message: data.text,
+                                    sender: data.user,
+                                    room: data.room
+                                });
+                                (function (callback) {
+                                    connection.query("SELECT COUNT(*) AS notification FROM notification WHERE sended = ? AND seen = 0", [reciever], function (err, number) {
+                                        connection.query("SELECT COUNT(*) as nbr_notif FROM notification WHERE sender = ? AND sended = ? and RIGHT(content, 7) = 'message' AND seen = 0", [data.user, reciever], function (err, notif) {
+                                            callback(number, notif);
+                                        });
+                                    })
+                                })(function (number, notif) {
+                                    io.sockets.in(rows[0].socket_id).emit("new Notification", {
+                                        value: number[0].notification,
+                                        contactnotif: notif[0].nbr_notif,
+                                        room: data.room
+                                    });
+                                })
+                            }
+                            socket.emit("new_message", {
+                                message: data.text,
+                                sender: data.user,
+                                room: data.room
+                            });
+                        })
+                    })
+                }
+            });
+        }
+    });
+    socket.on("seen Notification", function () {
+        connection.query("UPDATE  notification SET seen = 1 WHERE sended = (SELECT username FROM users WHERE sessionID= ?)", [sessionid], function (err) {
+            if (err) throw err;
+        })
+    });
+    socket.on("seen message", function (data) {
+        connection.query("SELECT matched, matcher FROM matchs WHERE id = ?", [data.room], function (err, rows) {
+            if (rows[0].matcher === data.user) {
+                var reciever = rows[0].matched;
+            } else {
+                var reciever = rows[0].matcher;
+            }
+            connection.query("UPDATE notification SET seen = 1 WHERE sender = ? AND  sended = ? AND RIGHT(content, 7)='message'", [reciever, data.user], function (err) {
+                if (err) throw err;
+                socket.emit("message update", data);
+            })
+        })
     });
     publicIp.v4().then(function (ip) {
         var location = geoip.lookup(ip).ll
