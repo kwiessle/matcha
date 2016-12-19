@@ -10,12 +10,9 @@
     <script src="https://localhost:4433/socket.io/socket.io.js"></script>
     <script src="/js/typeahead.min.js"></script>
     <script src="/js/search.js"></script>
-    <script src="/js/users.js"></script>
 </head>
 
 <body>
-    <script src="/js/notification.js"></script>
-    <script src="/js/status.js"></script>
     <div class="menu">
         <form method="get" action="/search" class="search-form">
             <input id="search-bar" type="text" name="search" placeholder="Search ..." class="typeahead tt-query" spellcheck="false" autocomplete="on" name="typeahead">
@@ -39,7 +36,7 @@
                 <div class="usr-name">{{firstname}} {{lastname}}
                     <br>
                     <div class="usr-age">{{birth}} ans {{location}}</div>
-                    <div class="online">{{login}}</div>
+                    <div id="status" class="online">{{login}}</div>
                 </div>
                 <div class="bio" align="center">Bio</div>
                 <div class="usr-bio-text">{{bio}}</div>
@@ -63,6 +60,9 @@
         <div class="separator"></div>
         <div class="separator"></div>
     </div>
+    <script src="/js/notification.js"></script>
+    <script src="/js/status.js"></script>
+    <script src="/js/users.js"></script>
 </body>
 
 </html>

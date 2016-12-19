@@ -3,14 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Matcha | Profile</title>
-    <link href="/stylesheets/main.css" rel="stylesheet">
-    <link href="/stylesheets/feed.css" rel="stylesheet">
+    <title>Matcha | Profile</title>
+    <link href="stylesheets/main.css" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
     <script src="https://localhost:4433/socket.io/socket.io.js"></script>
     <script src="/js/typeahead.min.js"></script>
     <script src="/js/search.js"></script>
-    <script src="/js/load.js"></script>
 </head>
 
 <body>
@@ -19,7 +17,7 @@
             <input id="search-bar" type="text" name="search" placeholder="Search ..." class="typeahead tt-query" spellcheck="false" autocomplete="on" name="typeahead">
             <input id="go" type="submit" name="search" value="Go!"> </form>
         <img id="menu-logo" src="/img/mini-logo.png" alt="mini-logo">
-        <a href="/notification.html">
+        <a id="notif-container" href="/notification.html">
             <div id="notification"></div>
         </a>
         <a href="/feed.html"><img class="menu-img" src="/img/feed.png"></a>
@@ -32,12 +30,10 @@
     <div class="separator"></div>
     <div class="separator"></div>
     <div class="site-content" align="center">
-        {{>display_notifications}}
-        <h1>{{message}}</h1>
+        <div class="err-type">404 Not Found</div>
+        <div class="synopsis">We are sorry. This page doesn't exists</div>
     </div>
-    <div class="separator"></div>
-    <div class="separator"></div>
-    <div class="separator"></div>
+    <script src="/js/search.js"></script>
     <script src="/js/notification.js"></script>
 </body>
 

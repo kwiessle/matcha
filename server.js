@@ -9,15 +9,15 @@ var https = require('https');
 var express = require('express');
 var path = require('path');
 var options = {
-    key: fs.readFileSync('certificates/server-key.pem'),
-    cert: fs.readFileSync('certificates/server-crt.pem'),
-    ca: fs.readFileSync('certificates/ca-crt.pem'),
+    key: fs.readFileSync('certificates/server.key'),
+    cert: fs.readFileSync('certificates/server.crt'),
+    ca: fs.readFileSync('certificates/server.csr'),
 };
 var app = express();
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-    //port: 8889,
-    port: 3307,
+    port: 8889,
+    //port: 3307,
     host: 'localhost',
     user: 'root',
     password: 'root'
@@ -100,7 +100,8 @@ connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`dictionary` ( `id` INT(5)
 connection.query("CREATE TABLE IF NOT EXISTS `matcha`.`messages` ( `id` INT(5) NOT NULL AUTO_INCREMENT , `sender` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `reciever` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `message` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL , `room` INT(5) NULL DEFAULT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_bin;");
 connection = mysql.createPool({
     connectionLimit: 100,
-    port: 3307,
+    //port: 3307,
+    port: 8889,
     host: 'localhost',
     user: 'root',
     password: 'root',
@@ -297,6 +298,10 @@ app.get('/reset_password.html', function (req, res) {
     res.render('reset_password.html')
 })
 
+app.get('/404.html', function (req, res) {
+    res.render('404.html')
+})
+
 app.get('/create_account.html', function (req, res) {
     res.render('create_account.html')
 });
@@ -436,10 +441,27 @@ app.get("/notification.html", function (req, res) {
     }
 });
 
+app.get('/deletenotif/:id', function (req, res) {
+    if (req.params.id) {
+        connection.query("DELETE FROM notification WHERE id = ?", [req.params.id], function (err) {
+            if (err) throw err;
+            else {
+                res.redirect('/notification.html')
+            }
+        })
+    } else {
+        res.redirect('/notification.html')
+    }
+});
+
+
 app.get('/user.html/:user', function (req, res) {
     var infos = [];
     if (!req.session.user) {
-        res.redirect('/');
+        res.redirect('/')
+    }
+    if (!req.session.profil_pic) {
+        res.redirect('/error.html')
     } else {
         if (req.params.user === req.session.user) {
             res.redirect('/profile.html');
@@ -491,6 +513,9 @@ app.get('/user.html/:user', function (req, res) {
                                         }
                                         if (match[0]) {
                                             infos.follow = "you match with " + rows[0].firstname;
+                                        }
+                                        if (!infos.profil_pic) {
+                                            infos.profil_pic = "img/no-pictures.png"
                                         }
                                         res.render('user.html', {
                                             users: {

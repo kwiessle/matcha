@@ -253,6 +253,52 @@ tr {
     margin-top: 30px;
 }
 
+.e1 {
+    background: #7fc4ff;
+}
+
+.e2 {
+    background: #ebebeb;
+}
+
+.notification {
+    margin-bottom: 10px;
+    height: 40px;
+    line-height: 40px;
+    max-width: 600px;
+    font-size: 0;
+}
+
+.notification div,
+.notification a {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 15px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.notification a,
+.notif-date {
+    float: right;
+}
+
+.notif-date {
+    background: #7fc4ff;
+    color: white;
+    width: 160px;
+}
+
+#delete_notif {
+    height: 30px;
+    background: #d8d8d8;
+    padding: 5px;
+}
+
+#delete_notif:hover {
+    background: #ffc0c0;
+}
+
 #filter:hover {
     background: #ffb576;
 }
